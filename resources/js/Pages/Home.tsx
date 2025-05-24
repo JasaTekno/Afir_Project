@@ -1,7 +1,8 @@
+import Card from '@/Components/Card';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 
-export default function Dashboard() {
+export default function Home() {
     return (
         <AuthenticatedLayout
             header={
@@ -14,10 +15,12 @@ export default function Dashboard() {
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900">
-                            You're logged in!
-                        </div>
+                    <div className="grid w-full grid-cols-2 gap-3 px-4 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
+                        <Card />
+                        <Card />
+                        <Card />
+                        <Card />
+                        <Card />
                     </div>
                 </div>
             </div>
