@@ -29,6 +29,10 @@ export type FlatCostItem = {
 };
 
 export type ShipmentCostFormProps = {
-    initialFixedCosts: { id: number; name: string }[];
-    initialVariableCosts?: { id: number; name: string }[];
+    initialFixedCosts: { id: number; name: string; amount: string | null }[];
+    initialVariableCosts?: {
+        id: number;
+        name: string;
+        amount: string | null;
+    }[];
 };
