@@ -1,461 +1,292 @@
-import { ShipmentCostFormProps } from '@/types';
-import { useState } from 'react';
-import CostItemInput from './CostItemInput';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+'use client';
 
+import { Button } from '@/components/ui/button';
 import {
-    addSubCostItem,
-    deleteCostItem,
-    updateCostItem,
-} from '../Utils/CostItemUtils';
+    DualCostItem,
+    flattenCostTree,
+    useShipmentCostForm,
+} from '../Hooks/useShipmentCostForm';
+import { CostInputTree } from './CostInputTree';
 
-interface DualCostItem {
-    id: number;
-    name: string;
-    amount: string;
-    parentId: number | null;
-    children: DualCostItem[];
-    isClientOwned?: boolean;
-    mirroredFromId?: number;
-}
+const ShipmentCostForm = () => {
+    const {
+        fixedCosts,
+        variableCosts,
+        setFixedCosts,
+        setVariableCosts,
+        handleClientAddSubCost,
+        handleCompanyAddSubCost,
+        addVariableCostRoot,
+    } = useShipmentCostForm();
 
-interface DualUserCosts {
-    client: DualCostItem[];
-    company: DualCostItem[];
-}
-
-const ShipmentCostForm = ({
-    initialFixedCosts,
-    initialVariableCosts = [],
-}: ShipmentCostFormProps) => {
-    const [fixedCosts, setFixedCosts] = useState<DualUserCosts>({
-        client: initialFixedCosts.map((c, i) => ({
-            id: i + 1,
-            name: c.name,
-            amount: '',
-            parentId: null,
-            children: [],
-            isClientOwned: true,
-        })),
-        company: initialFixedCosts.map((c, i) => ({
-            id: 10000 + i + 1,
-            name: c.name,
-            amount: '',
-            parentId: null,
-            children: [],
-            isClientOwned: false,
-            mirroredFromId: i + 1,
-        })),
-    });
-
-    const [variableCosts, setVariableCosts] = useState<DualUserCosts>({
-        client: initialVariableCosts.map((c, i) => ({
-            id: 1000 + i + 1,
-            name: c.name,
-            amount: '',
-            parentId: null,
-            children: [],
-            isClientOwned: true,
-        })),
-        company: initialVariableCosts.map((c, i) => ({
-            id: 20000 + i + 1,
-            name: c.name,
-            amount: '',
-            parentId: null,
-            children: [],
-            isClientOwned: false,
-            mirroredFromId: 1000 + i + 1,
-        })),
-    });
-
-    const [nextId, setNextId] = useState(30000);
-
-    const mirrorClientItem = (clientItem: DualCostItem): DualCostItem => {
-        const companyId = nextId;
-        setNextId((id) => id + 1);
-
-        return {
-            ...clientItem,
-            id: companyId,
-            isClientOwned: false,
-            mirroredFromId: clientItem.id,
-            children: clientItem.children.map((child) =>
-                mirrorClientItem(child),
-            ),
-        };
-    };
-
-    // Update mirrored items in company side when client changes
-    const updateMirroredItems = (
-        updatedClientItem: DualCostItem,
-        companyItems: DualCostItem[],
-    ): DualCostItem[] => {
-        return companyItems.map((item) => {
-            if (item.mirroredFromId === updatedClientItem.id) {
-                return {
-                    ...item,
-                    name: updatedClientItem.name,
-                    amount: updatedClientItem.amount,
-                    children: item.children.map((child) => {
-                        const correspondingClientChild =
-                            updatedClientItem.children.find(
-                                (c) => c.id === child.mirroredFromId,
-                            );
-                        if (correspondingClientChild) {
-                            return updateMirroredItems(
-                                correspondingClientChild,
-                                [child],
-                            )[0];
-                        }
-                        return child;
-                    }),
-                };
+    const updateCostItem = (
+        list: DualCostItem[],
+        id: string,
+        field: 'name' | 'amount',
+        value: string,
+    ): DualCostItem[] =>
+        list.map((item) => {
+            if (item.id === id) {
+                return { ...item, [field]: value };
             }
             return {
                 ...item,
-                children: updateMirroredItems(updatedClientItem, item.children),
+                children: updateCostItem(item.children, id, field, value),
             };
         });
-    };
 
-    const handleClientChange = (
-        id: number,
-        updatedItem: DualCostItem,
-        costType: 'fixed' | 'variable',
-    ) => {
-        const setCosts =
-            costType === 'fixed' ? setFixedCosts : setVariableCosts;
-
-        setCosts((prev) => {
-            const updatedClient = updateCostItem(id, updatedItem, prev.client);
-            const updatedCompany = updateMirroredItems(
-                updatedItem,
-                prev.company,
-            );
-
+    const updateMirroredItem = (
+        list: DualCostItem[],
+        mirroredFromId: string,
+        field: 'name' | 'amount',
+        value: string,
+    ): DualCostItem[] =>
+        list.map((item) => {
+            if (item.mirroredFromId === mirroredFromId) {
+                return { ...item, [field]: value };
+            }
             return {
-                client: updatedClient,
-                company: updatedCompany,
+                ...item,
+                children: updateMirroredItem(
+                    item.children,
+                    mirroredFromId,
+                    field,
+                    value,
+                ),
             };
         });
-    };
 
-    const handleCompanyChange = (
-        id: number,
-        updatedItem: DualCostItem,
-        costType: 'fixed' | 'variable',
-    ) => {
-        const setCosts =
-            costType === 'fixed' ? setFixedCosts : setVariableCosts;
-
-        setCosts((prev) => ({
-            ...prev,
-            company: updateCostItem(id, updatedItem, prev.company),
-        }));
-    };
-
-    const handleClientAddSubCost = (
-        parentId: number,
-        costType: 'fixed' | 'variable',
-    ) => {
-        const setCosts =
-            costType === 'fixed' ? setFixedCosts : setVariableCosts;
-
-        const newClientItem: DualCostItem = {
-            id: nextId,
-            name: '',
-            amount: '',
-            parentId,
-            children: [],
-            isClientOwned: true,
-        };
-        setNextId((id) => id + 1);
-
-        const newCompanyItem = mirrorClientItem(newClientItem);
-
-        setCosts((prev) => ({
-            client: addSubCostItem(parentId, prev.client, newClientItem),
-            company: addSubCostItem(
-                prev.company.find((item) => item.mirroredFromId === parentId)
-                    ?.id || parentId,
-                prev.company,
-                newCompanyItem,
-            ),
-        }));
-    };
-
-    const handleCompanyAddSubCost = (
-        parentId: number,
-        costType: 'fixed' | 'variable',
-    ) => {
-        const setCosts =
-            costType === 'fixed' ? setFixedCosts : setVariableCosts;
-
-        const newItem: DualCostItem = {
-            id: nextId,
-            name: '',
-            amount: '',
-            parentId,
-            children: [],
-            isClientOwned: false,
-        };
-        setNextId((id) => id + 1);
-
-        setCosts((prev) => ({
-            ...prev,
-            company: addSubCostItem(parentId, prev.company, newItem),
-        }));
-    };
-
-    const addVariableCostRoot = (userType: 'client' | 'company') => {
-        if (userType === 'client') {
-            const newClientItem: DualCostItem = {
-                id: nextId,
-                name: '',
-                amount: '',
-                parentId: null,
-                children: [],
-                isClientOwned: true,
-            };
-            setNextId((id) => id + 1);
-
-            const newCompanyItem = mirrorClientItem(newClientItem);
-
-            setVariableCosts((prev) => ({
-                client: [...prev.client, newClientItem],
-                company: [...prev.company, newCompanyItem],
-            }));
-        } else {
-            const newItem: DualCostItem = {
-                id: nextId,
-                name: '',
-                amount: '',
-                parentId: null,
-                children: [],
-                isClientOwned: false,
-            };
-            setNextId((id) => id + 1);
-
-            setVariableCosts((prev) => ({
-                ...prev,
-                company: [...prev.company, newItem],
-            }));
-        }
-    };
-
-    // Remove mirrored items when client item is deleted
-    const removeMirroredItems = (
-        deletedClientId: number,
-        companyItems: DualCostItem[],
+    const deleteCostItemRecursively = (
+        list: DualCostItem[],
+        id: string,
     ): DualCostItem[] => {
-        return companyItems
-            .filter((item) => item.mirroredFromId !== deletedClientId)
+        return list
+            .filter((item) => item.id !== id)
             .map((item) => ({
                 ...item,
-                children: removeMirroredItems(deletedClientId, item.children),
+                children: deleteCostItemRecursively(item.children, id),
             }));
     };
 
-    const handleClientDeleteCostItem = (
-        id: number,
-        costType: 'fixed' | 'variable',
-    ) => {
-        const setCosts =
-            costType === 'fixed' ? setFixedCosts : setVariableCosts;
-
-        setCosts((prev) => ({
-            client: deleteCostItem(id, prev.client),
-            company: removeMirroredItems(id, prev.company),
-        }));
+    const deleteMirroredItem = (
+        list: DualCostItem[],
+        mirroredFromId: string,
+    ): DualCostItem[] => {
+        return list
+            .filter((item) => item.mirroredFromId !== mirroredFromId)
+            .map((item) => ({
+                ...item,
+                children: deleteMirroredItem(item.children, mirroredFromId),
+            }));
     };
 
-    const handleCompanyDeleteCostItem = (
-        id: number,
-        costType: 'fixed' | 'variable',
+    const onClientFixedChange = (
+        id: string,
+        field: 'name' | 'amount',
+        value: string,
     ) => {
-        const setCosts =
-            costType === 'fixed' ? setFixedCosts : setVariableCosts;
+        setFixedCosts((prev) => {
+            const newClient = updateCostItem(prev.client, id, field, value);
+            const newCompany = updateMirroredItem(
+                prev.company,
+                id,
+                field,
+                value,
+            );
 
-        setCosts((prev) => ({
+            return { client: newClient, company: newCompany };
+        });
+    };
+
+    const onClientVariableChange = (
+        id: string,
+        field: 'name' | 'amount',
+        value: string,
+    ) => {
+        setVariableCosts((prev) => {
+            const newClient = updateCostItem(prev.client, id, field, value);
+            const newCompany = updateMirroredItem(
+                prev.company,
+                id,
+                field,
+                value,
+            );
+
+            return { client: newClient, company: newCompany };
+        });
+    };
+
+    const onCompanyFixedChange = (
+        id: string,
+        field: 'name' | 'amount',
+        value: string,
+    ) => {
+        setFixedCosts((prev) => ({
             ...prev,
-            company: deleteCostItem(id, prev.company),
+            company: updateCostItem(prev.company, id, field, value),
         }));
     };
 
-    const flattenCostItems = (
-        items: DualCostItem[],
-        parentId: number | null = null,
-    ): {
-        id: number;
-        name: string;
-        amount: string;
-        parent_id: number | null;
-        user_type: 'client' | 'company';
-        mirrored_from_id?: number;
-    }[] => {
-        return items.flatMap((item) => [
-            {
-                id: item.id,
-                name: item.name,
-                amount: item.amount,
-                parent_id: parentId,
-                user_type: item.isClientOwned ? 'client' : 'company',
-                mirrored_from_id: item.mirroredFromId,
-            },
-            ...flattenCostItems(item.children, item.id),
-        ]);
+    const onCompanyVariableChange = (
+        id: string,
+        field: 'name' | 'amount',
+        value: string,
+    ) => {
+        setVariableCosts((prev) => ({
+            ...prev,
+            company: updateCostItem(prev.company, id, field, value),
+        }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const onDeleteClientFixed = (id: string) => {
+        setFixedCosts((prev) => {
+            const newClient = deleteCostItemRecursively(prev.client, id);
+            const newCompany = deleteMirroredItem(prev.company, id);
+
+            return { client: newClient, company: newCompany };
+        });
+    };
+
+    const onDeleteClientVariable = (id: string) => {
+        setVariableCosts((prev) => {
+            const newClient = deleteCostItemRecursively(prev.client, id);
+            const newCompany = deleteMirroredItem(prev.company, id);
+
+            return { client: newClient, company: newCompany };
+        });
+    };
+
+    const onDeleteCompanyFixed = (id: string) => {
+        setFixedCosts((prev) => ({
+            ...prev,
+            company: deleteCostItemRecursively(prev.company, id),
+        }));
+    };
+
+    const onDeleteCompanyVariable = (id: string) => {
+        setVariableCosts((prev) => ({
+            ...prev,
+            company: deleteCostItemRecursively(prev.company, id),
+        }));
+    };
+
+    const handleSubmit = () => {
+        const flatFixedClient = flattenCostTree(
+            fixedCosts.client,
+            'client',
+            'fixed',
+        );
+        const flatFixedCompany = flattenCostTree(
+            fixedCosts.company,
+            'company',
+            'fixed',
+        );
+
+        const flatVariableClient = flattenCostTree(
+            variableCosts.client,
+            'client',
+            'variable',
+        );
+        const flatVariableCompany = flattenCostTree(
+            variableCosts.company,
+            'company',
+            'variable',
+        );
 
         const allCosts = [
-            ...flattenCostItems(fixedCosts.client),
-            ...flattenCostItems(fixedCosts.company),
-            ...flattenCostItems(variableCosts.client),
-            ...flattenCostItems(variableCosts.company),
+            ...flatFixedClient,
+            ...flatFixedCompany,
+            ...flatVariableClient,
+            ...flatVariableCompany,
         ];
 
-        console.log('Submit all cost items:', allCosts);
+        console.log('DATA KIRIM BACKEND:', allCosts);
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <div style={{ display: 'flex', gap: '2rem' }}>
-                {/* Client Side */}
-                <div
-                    style={{
-                        flex: 1,
-                        border: '1px solid #ccc',
-                        padding: '1rem',
-                    }}
-                >
-                    <h1>CLIENT REPORT</h1>
+        <div className="grid grid-cols-2 gap-8">
+            {/* CLIENT SIDE */}
+            <div className="space-y-6 border-r pr-4">
+                <h1 className="text-2xl font-bold text-blue-600">
+                    CLIENT REPORT
+                </h1>
 
-                    <h2>Fixed Cost</h2>
-                    {fixedCosts.client.map((item) => (
-                        <CostItemInput
-                            key={item.id}
-                            item={item}
-                            onChange={(id, updated) =>
-                                handleClientChange(
-                                    id,
-                                    updated as DualCostItem,
-                                    'fixed',
-                                )
-                            }
-                            onAddSubCost={(id) =>
-                                handleClientAddSubCost(id, 'fixed')
-                            }
-                            onDelete={(id) =>
-                                handleClientDeleteCostItem(id, 'fixed')
-                            }
-                        />
-                    ))}
-
-                    <hr />
-
-                    <h2>
-                        Variable Cost{' '}
-                        <button
-                            type="button"
-                            onClick={() => addVariableCostRoot('client')}
-                        >
-                            + Tambah Variable Cost Baru
-                        </button>
-                    </h2>
-
-                    {variableCosts.client.map((item) => (
-                        <CostItemInput
-                            key={item.id}
-                            item={item}
-                            onChange={(id, updated) =>
-                                handleClientChange(
-                                    id,
-                                    updated as DualCostItem,
-                                    'variable',
-                                )
-                            }
-                            onAddSubCost={(id) =>
-                                handleClientAddSubCost(id, 'variable')
-                            }
-                            onDelete={(id) =>
-                                handleClientDeleteCostItem(id, 'variable')
-                            }
-                        />
-                    ))}
+                <div>
+                    <h2 className="mb-4 text-xl font-bold">Biaya Tetap</h2>
+                    <CostInputTree
+                        items={fixedCosts.client}
+                        onChange={onClientFixedChange}
+                        onAddSubCost={(parentId) =>
+                            handleClientAddSubCost(parentId, 'fixed')
+                        }
+                        onDelete={onDeleteClientFixed}
+                        showReadOnlyIndicator={false}
+                    />
                 </div>
 
-                {/* Company Side */}
-                <div
-                    style={{
-                        flex: 1,
-                        border: '1px solid #ccc',
-                        padding: '1rem',
-                    }}
-                >
-                    <h1>COMPANY REPORT</h1>
-
-                    <h2>Fixed Cost</h2>
-                    {fixedCosts.company.map((item) => (
-                        <CostItemInput
-                            key={item.id}
-                            item={item}
-                            onChange={(id, updated) =>
-                                handleCompanyChange(
-                                    id,
-                                    updated as DualCostItem,
-                                    'fixed',
-                                )
-                            }
-                            onAddSubCost={(id) =>
-                                handleCompanyAddSubCost(id, 'fixed')
-                            }
-                            onDelete={(id) =>
-                                handleCompanyDeleteCostItem(id, 'fixed')
-                            }
-                            readOnlyName={!!item.mirroredFromId} // Make name readonly if mirrored
-                        />
-                    ))}
-
-                    <hr />
-
-                    <h2>
-                        Variable Cost{' '}
-                        <button
-                            type="button"
-                            onClick={() => addVariableCostRoot('company')}
-                        >
-                            + Tambah Variable Cost Baru (Company Only)
-                        </button>
-                    </h2>
-
-                    {variableCosts.company.map((item) => (
-                        <CostItemInput
-                            key={item.id}
-                            item={item}
-                            onChange={(id, updated) =>
-                                handleCompanyChange(
-                                    id,
-                                    updated as DualCostItem,
-                                    'variable',
-                                )
-                            }
-                            onAddSubCost={(id) =>
-                                handleCompanyAddSubCost(id, 'variable')
-                            }
-                            onDelete={(id) =>
-                                handleCompanyDeleteCostItem(id, 'variable')
-                            }
-                            readOnlyName={!!item.mirroredFromId} // Make name readonly if mirrored
-                        />
-                    ))}
+                <div>
+                    <h2 className="mb-2 text-xl font-bold">Biaya Variabel</h2>
+                    <Button
+                        onClick={() => addVariableCostRoot('client')}
+                        className="mb-4"
+                    >
+                        + Tambah Biaya Variabel Baru
+                    </Button>
+                    <CostInputTree
+                        items={variableCosts.client}
+                        onChange={onClientVariableChange}
+                        onAddSubCost={(parentId) =>
+                            handleClientAddSubCost(parentId, 'variable')
+                        }
+                        onDelete={onDeleteClientVariable}
+                        showReadOnlyIndicator={false}
+                    />
                 </div>
             </div>
 
-            <button type="submit" style={{ marginTop: 20, width: '100%' }}>
-                Simpan Report
-            </button>
-        </form>
+            {/* COMPANY SIDE */}
+            <div className="space-y-6 pl-4">
+                <h1 className="text-2xl font-bold text-green-600">
+                    COMPANY REPORT
+                </h1>
+
+                <div>
+                    <h2 className="mb-4 text-xl font-bold">Biaya Tetap</h2>
+                    <CostInputTree
+                        items={fixedCosts.company}
+                        onChange={onCompanyFixedChange}
+                        onAddSubCost={(parentId) =>
+                            handleCompanyAddSubCost(parentId, 'fixed')
+                        }
+                        onDelete={onDeleteCompanyFixed}
+                        showReadOnlyIndicator={true}
+                    />
+                </div>
+
+                <div>
+                    <h2 className="mb-2 text-xl font-bold">Biaya Variabel</h2>
+                    <Button
+                        onClick={() => addVariableCostRoot('company')}
+                        className="mb-4"
+                    >
+                        + Tambah Biaya Variabel Baru (Company Only)
+                    </Button>
+                    <CostInputTree
+                        items={variableCosts.company}
+                        onChange={onCompanyVariableChange}
+                        onAddSubCost={(parentId) =>
+                            handleCompanyAddSubCost(parentId, 'variable')
+                        }
+                        onDelete={onDeleteCompanyVariable}
+                        showReadOnlyIndicator={true}
+                    />
+                </div>
+            </div>
+            <Button onClick={handleSubmit} className="mt-8 w-full">
+                Simpan Semua Biaya
+            </Button>
+        </div>
     );
 };
 

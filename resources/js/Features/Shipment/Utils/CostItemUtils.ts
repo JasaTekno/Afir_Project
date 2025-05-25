@@ -1,49 +1,58 @@
-import { CostItem } from '@/types';
+import { DualCostItem } from '../Hooks/useShipmentCostForm';
 
-export const updateCostItem = (
-    id: number,
-    updatedItem: CostItem,
-    items: CostItem[],
-): CostItem[] => {
-    return items.map((item) => {
-        if (item.id === id) return updatedItem;
-        if (item.children.length) {
+export function updateItemAndMirror(
+    clientList: DualCostItem[],
+    companyList: DualCostItem[],
+    id: string,
+    field: 'name' | 'amount',
+    value: string,
+): [DualCostItem[], DualCostItem[]] {
+    const update = (list: DualCostItem[]): DualCostItem[] =>
+        list.map((item) => {
+            if (item.id === id) {
+                return { ...item, [field]: value };
+            }
+            return { ...item, children: update(item.children) };
+        });
+
+    return [update(clientList), update(companyList)];
+}
+
+export function addSubCostAndMirror(
+    clientList: DualCostItem[],
+    companyList: DualCostItem[],
+    parentId: string,
+    newSub: DualCostItem,
+): [DualCostItem[], DualCostItem[]] {
+    const addToParent = (list: DualCostItem[]): DualCostItem[] =>
+        list.map((item) => {
+            if (item.id === parentId) {
+                return {
+                    ...item,
+                    children: [...item.children, newSub],
+                };
+            }
             return {
                 ...item,
-                children: updateCostItem(id, updatedItem, item.children),
+                children: addToParent(item.children),
             };
-        }
-        return item;
-    });
-};
+        });
 
-export const addSubCostItem = (
-    parentId: number,
-    items: CostItem[],
-    newItem: CostItem,
-): CostItem[] => {
-    return items.map((item) => {
-        if (item.id === parentId) {
-            return { ...item, children: [...item.children, newItem] };
-        }
-        if (item.children.length) {
-            return {
+    return [addToParent(clientList), addToParent(companyList)];
+}
+
+export function deleteItemAndMirror(
+    clientList: DualCostItem[],
+    companyList: DualCostItem[],
+    id: string,
+): [DualCostItem[], DualCostItem[]] {
+    const deleteRecursive = (list: DualCostItem[]): DualCostItem[] =>
+        list
+            .filter((item) => item.id !== id)
+            .map((item) => ({
                 ...item,
-                children: addSubCostItem(parentId, item.children, newItem),
-            };
-        }
-        return item;
-    });
-};
+                children: deleteRecursive(item.children),
+            }));
 
-export const deleteCostItem = (
-    idToDelete: number,
-    items: CostItem[],
-): CostItem[] => {
-    return items
-        .filter((item) => item.id !== idToDelete)
-        .map((item) => ({
-            ...item,
-            children: deleteCostItem(idToDelete, item.children),
-        }));
-};
+    return [deleteRecursive(clientList), deleteRecursive(companyList)];
+}

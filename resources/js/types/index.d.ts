@@ -14,24 +14,24 @@ export type PageProps<
 };
 
 export type CostItem = {
-    id: number;
+    id: string;
     name: string;
     amount: string;
-    parentId: number | null;
+    parentId: string | null;
     children: CostItem[];
 };
 
 export type FlatCostItem = {
-    id: number;
+    id: string;
     name: string;
     amount: string;
-    parent_id: number | null;
+    parent_id: string | null;
 };
 
 export type ShipmentCostFormProps = {
-    initialFixedCosts: { id: number; name: string; amount: string | null }[];
+    initialFixedCosts: { id: string; name: string; amount: string | null }[];
     initialVariableCosts?: {
-        id: number;
+        id: string;
         name: string;
         amount: string | null;
     }[];
