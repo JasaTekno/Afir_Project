@@ -1,3 +1,4 @@
+import { FlatCostItem } from '@/types';
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -6,7 +7,9 @@ export type CostItemBase = {
     name: string;
     amount: string;
     parentId: string | null;
+    side: 'client' | 'company';
     children: DualCostItem[];
+    calculationType: 'manual' | 'multiply_children';
 };
 
 export type DualCostItem = CostItemBase & {
@@ -25,15 +28,6 @@ type ShipmentCost = {
     };
 };
 
-type FlatCostItem = {
-    id: string;
-    name: string;
-    amount: number;
-    parentId: string | null;
-    side: 'client' | 'company';
-    type: 'fixed' | 'variable';
-};
-
 export const flattenCostTree = (
     items: DualCostItem[],
     side: 'client' | 'company',
@@ -41,13 +35,15 @@ export const flattenCostTree = (
     parentId: string | null = null,
 ): FlatCostItem[] => {
     return items.flatMap((item) => {
+        console.log(item);
         const current: FlatCostItem = {
             id: item.id,
             name: item.name,
             amount: parseFloat(item.amount) || 0,
-            parentId,
+            parentId: parentId,
             side,
             type,
+            calculationType: item.calculationType,
         };
 
         const children = flattenCostTree(item.children, side, type, item.id);
@@ -61,6 +57,7 @@ export const useShipmentCostForm = () => {
         { name: 'Uang Makan Crew' },
         { name: 'Biaya Operasional' },
         { name: 'Biaya Koordinasi Keamanan' },
+        { name: 'Sewa Kapal' },
     ];
 
     const generateDualCostItem = (base: {
@@ -75,8 +72,10 @@ export const useShipmentCostForm = () => {
             name: base.name,
             amount: '',
             parentId: base.parentId,
+            side: 'client',
             children: [],
             isClientOwned: true,
+            calculationType: 'manual',
         };
 
         const companyItem: DualCostItem = {
@@ -84,9 +83,11 @@ export const useShipmentCostForm = () => {
             name: base.name,
             amount: '',
             parentId: base.parentId,
+            side: 'company',
             children: [],
             isClientOwned: false,
             mirroredFromId: clientId,
+            calculationType: 'manual',
         };
 
         return [clientItem, companyItem];
@@ -157,8 +158,10 @@ export const useShipmentCostForm = () => {
                 name: '',
                 amount: '',
                 parentId,
+                side: 'client',
                 children: [],
                 isClientOwned: true,
+                calculationType: 'manual',
             };
 
             // Create mirror for company side
@@ -194,8 +197,10 @@ export const useShipmentCostForm = () => {
                 name: '',
                 amount: '',
                 parentId,
+                side: 'company',
                 children: [],
                 isClientOwned: false,
+                calculationType: 'manual',
             };
 
             const newCompany = addSubCostToParent(
@@ -216,8 +221,10 @@ export const useShipmentCostForm = () => {
                 name: '',
                 amount: '',
                 parentId: null,
+                side: 'client',
                 children: [],
                 isClientOwned: true,
+                calculationType: 'manual',
             };
 
             const newCompanyItem = mirrorClientItem(newClientItem);
@@ -232,8 +239,10 @@ export const useShipmentCostForm = () => {
                 name: '',
                 amount: '',
                 parentId: null,
+                side: 'company',
                 children: [],
                 isClientOwned: false,
+                calculationType: 'manual',
             };
 
             setVariableCosts((prev) => ({

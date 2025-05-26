@@ -4,17 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CostItem extends Model
 {
+    use HasUuids;
+
     protected $fillable = [
         'shipment_id',
-        'cost_category_id',
         'parent_id',
         'name',
+        'side',
         'amount',
+        'calculation_type'
     ];
+
+    protected $keyType = 'string';
+
+    public $incrementing = false;
 
     protected $casts = [
         'amount' => 'decimal:2',

@@ -4,7 +4,11 @@ import { DualCostItem } from '../Hooks/useShipmentCostForm';
 
 type Props = {
     items: DualCostItem[];
-    onChange: (id: string, field: 'name' | 'amount', value: string) => void;
+    onChange: (
+        id: string,
+        field: 'name' | 'amount' | 'calculationType',
+        value: string,
+    ) => void;
     onAddSubCost: (parentId: string) => void;
     onDelete: (id: string) => void;
     showReadOnlyIndicator?: boolean;
@@ -59,13 +63,30 @@ export function CostInputTree({
                         <Button
                             variant="outline"
                             size="sm"
+                            type="button"
                             onClick={() => onAddSubCost(item.id)}
                         >
                             + Sub
                         </Button>
+                        <select
+                            value={item.calculationType ?? 'manual'}
+                            onChange={(e) =>
+                                onChange(
+                                    item.id,
+                                    'calculationType',
+                                    e.target.value,
+                                )
+                            }
+                        >
+                            <option value="manual">Manual</option>
+                            <option value="multiply_children">
+                                Kali Sub-Cost
+                            </option>
+                        </select>
                         <Button
                             variant="destructive"
                             size="sm"
+                            type="button"
                             onClick={() => onDelete(item.id)}
                         >
                             Hapus

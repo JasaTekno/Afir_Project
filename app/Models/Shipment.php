@@ -47,6 +47,16 @@ class Shipment extends Model
             ->whereNull('parent_id');
     }
 
+    public function costTotals()
+    {
+        return $this->hasMany(ShipmentCostTotal::class);
+    }
+
+    public function costTotalFor($side)
+    {
+        return $this->costTotals()->where('side', $side)->first();
+    }
+
     public function variableCosts($side)
     {
         return $this->costItems()

@@ -1,13 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
+import PrimaryButton from '@/Components/PrimaryButton';
 import { Button } from '@/components/ui/button';
+import { FlatCostItem } from '@/types';
+import { useForm } from '@inertiajs/react';
+import { FormEvent, memo } from 'react';
 import {
     DualCostItem,
     flattenCostTree,
     useShipmentCostForm,
 } from '../Hooks/useShipmentCostForm';
 import { CostInputTree } from './CostInputTree';
+
+const MemoizedCostInputTree = memo(CostInputTree);
 
 const ShipmentCostForm = () => {
     const {
@@ -20,14 +26,25 @@ const ShipmentCostForm = () => {
         addVariableCostRoot,
     } = useShipmentCostForm();
 
+    const { data, post, processing } = useForm<{
+        title: string;
+        date: string;
+        costs: FlatCostItem[];
+    }>({
+        title: 'pengiriman 1 test',
+        date: '2025-01-25',
+        costs: [],
+    });
+
     const updateCostItem = (
         list: DualCostItem[],
         id: string,
-        field: 'name' | 'amount',
+        field: 'name' | 'amount' | 'calculationType',
         value: string,
     ): DualCostItem[] =>
         list.map((item) => {
             if (item.id === id) {
+                console.log(`Update item ${id} field ${field} to`, value);
                 return { ...item, [field]: value };
             }
             return {
@@ -39,7 +56,7 @@ const ShipmentCostForm = () => {
     const updateMirroredItem = (
         list: DualCostItem[],
         mirroredFromId: string,
-        field: 'name' | 'amount',
+        field: 'name' | 'amount' | 'calculationType',
         value: string,
     ): DualCostItem[] =>
         list.map((item) => {
@@ -83,7 +100,7 @@ const ShipmentCostForm = () => {
 
     const onClientFixedChange = (
         id: string,
-        field: 'name' | 'amount',
+        field: 'name' | 'amount' | 'calculationType',
         value: string,
     ) => {
         setFixedCosts((prev) => {
@@ -101,7 +118,7 @@ const ShipmentCostForm = () => {
 
     const onClientVariableChange = (
         id: string,
-        field: 'name' | 'amount',
+        field: 'name' | 'amount' | 'calculationType',
         value: string,
     ) => {
         setVariableCosts((prev) => {
@@ -119,7 +136,7 @@ const ShipmentCostForm = () => {
 
     const onCompanyFixedChange = (
         id: string,
-        field: 'name' | 'amount',
+        field: 'name' | 'amount' | 'calculationType',
         value: string,
     ) => {
         setFixedCosts((prev) => ({
@@ -130,7 +147,7 @@ const ShipmentCostForm = () => {
 
     const onCompanyVariableChange = (
         id: string,
-        field: 'name' | 'amount',
+        field: 'name' | 'amount' | 'calculationType',
         value: string,
     ) => {
         setVariableCosts((prev) => ({
@@ -171,7 +188,9 @@ const ShipmentCostForm = () => {
         }));
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
         const flatFixedClient = flattenCostTree(
             fixedCosts.client,
             'client',
@@ -201,11 +220,16 @@ const ShipmentCostForm = () => {
             ...flatVariableCompany,
         ];
 
-        console.log('DATA KIRIM BACKEND:', allCosts);
+        data.costs = allCosts;
+
+        post(route('shipments.costs.store'), {
+            onSuccess: () => console.log('Berhasil disimpan!'),
+            onError: (e) => console.log(e),
+        });
     };
 
     return (
-        <div className="grid grid-cols-2 gap-8">
+        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-8">
             {/* CLIENT SIDE */}
             <div className="space-y-6 border-r pr-4">
                 <h1 className="text-2xl font-bold text-blue-600">
@@ -213,8 +237,8 @@ const ShipmentCostForm = () => {
                 </h1>
 
                 <div>
-                    <h2 className="mb-4 text-xl font-bold">Biaya Tetap</h2>
-                    <CostInputTree
+                    <h2 className="mb-4 text-xl font-bold">Fixed Cost</h2>
+                    <MemoizedCostInputTree
                         items={fixedCosts.client}
                         onChange={onClientFixedChange}
                         onAddSubCost={(parentId) =>
@@ -226,14 +250,15 @@ const ShipmentCostForm = () => {
                 </div>
 
                 <div>
-                    <h2 className="mb-2 text-xl font-bold">Biaya Variabel</h2>
+                    <h2 className="mb-2 text-xl font-bold">Variable Cost</h2>
                     <Button
                         onClick={() => addVariableCostRoot('client')}
                         className="mb-4"
+                        type="button"
                     >
-                        + Tambah Biaya Variabel Baru
+                        + Tambah Variable Cost Baru
                     </Button>
-                    <CostInputTree
+                    <MemoizedCostInputTree
                         items={variableCosts.client}
                         onChange={onClientVariableChange}
                         onAddSubCost={(parentId) =>
@@ -252,8 +277,8 @@ const ShipmentCostForm = () => {
                 </h1>
 
                 <div>
-                    <h2 className="mb-4 text-xl font-bold">Biaya Tetap</h2>
-                    <CostInputTree
+                    <h2 className="mb-4 text-xl font-bold">Fixed Cost</h2>
+                    <MemoizedCostInputTree
                         items={fixedCosts.company}
                         onChange={onCompanyFixedChange}
                         onAddSubCost={(parentId) =>
@@ -265,14 +290,15 @@ const ShipmentCostForm = () => {
                 </div>
 
                 <div>
-                    <h2 className="mb-2 text-xl font-bold">Biaya Variabel</h2>
+                    <h2 className="mb-2 text-xl font-bold">Variable Cost</h2>
                     <Button
                         onClick={() => addVariableCostRoot('company')}
+                        type="button"
                         className="mb-4"
                     >
-                        + Tambah Biaya Variabel Baru (Company Only)
+                        + Tambah Variable Cost Baru (Company Only)
                     </Button>
-                    <CostInputTree
+                    <MemoizedCostInputTree
                         items={variableCosts.company}
                         onChange={onCompanyVariableChange}
                         onAddSubCost={(parentId) =>
@@ -283,10 +309,10 @@ const ShipmentCostForm = () => {
                     />
                 </div>
             </div>
-            <Button onClick={handleSubmit} className="mt-8 w-full">
+            <PrimaryButton disabled={processing}>
                 Simpan Semua Biaya
-            </Button>
-        </div>
+            </PrimaryButton>
+        </form>
     );
 };
 
