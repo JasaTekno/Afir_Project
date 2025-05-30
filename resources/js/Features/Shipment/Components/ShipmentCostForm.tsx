@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
+import DatePicker from '@/Components/DatePicker';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FlatCostItem } from '@/types';
 import { useForm } from '@inertiajs/react';
-import { FormEvent, memo } from 'react';
+import { FormEvent, memo, useState } from 'react';
 import {
     DualCostItem,
     flattenCostTree,
@@ -27,13 +28,17 @@ const ShipmentCostForm = () => {
         addVariableCostRoot,
     } = useShipmentCostForm();
 
+    const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+        new Date(),
+    );
+
     const { data, post, processing } = useForm<{
         title: string;
         date: string;
         costs: FlatCostItem[];
     }>({
-        title: 'pengiriman 1 test',
-        date: '2025-01-25',
+        title: '',
+        date: '',
         costs: [],
     });
 
@@ -235,7 +240,20 @@ const ShipmentCostForm = () => {
                 <div className="bg-white px-4 py-4 sm:px-6 lg:px-8">
                     <div className="space-y-1">
                         <h3 className="text-lg font-bold">Nama pengiriman</h3>
-                        <Input placeholder="Nama laporan" name="title" />
+                        <Input
+                            placeholder="Nama laporan"
+                            name="title"
+                            required
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <h3 className="text-lg font-bold">
+                            Tanggal Pengiriman
+                        </h3>
+                        <DatePicker
+                            value={selectedDate}
+                            onChange={setSelectedDate}
+                        />
                     </div>
                 </div>
                 <div className="grid grid-cols-1 gap-8 bg-white px-4 py-4 sm:px-6 lg:px-8 xl:grid-cols-2">

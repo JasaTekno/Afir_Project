@@ -46,8 +46,6 @@ class ShipmentController extends Controller
 
         DB::beginTransaction();
 
-        dd($validated);
-
         try {
             $shipment = Shipment::create([
                 'title' => $validated['title'],
