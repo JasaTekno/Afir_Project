@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Shipment;
 use App\Models\ShipmentCostTotal;
-use App\Http\Requests\StoreShipmentCostRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;

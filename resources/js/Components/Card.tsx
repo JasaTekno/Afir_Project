@@ -1,12 +1,56 @@
-const Card = () => {
+import { ArrowRightIcon } from 'lucide-react';
+
+interface Props {
+    title: string;
+    date: string;
+    clientTotal: number;
+    companyTotal: number;
+    onClick?: () => void;
+}
+
+const ShipmentCard = ({
+    title,
+    date,
+    clientTotal,
+    companyTotal,
+    onClick,
+}: Props) => {
     return (
-        <div className="cursor-pointer rounded-lg bg-white p-4 shadow-lg duration-200 ease-in-out hover:scale-105">
-            <h1 className="text-lg font-bold">
-                Title of this generation that will be intouch
-            </h1>
-            <p className="text-sm">21 May 2012</p>
+        <div
+            onClick={onClick}
+            className="group relative cursor-pointer rounded-xl border bg-white p-6 shadow-md transition hover:shadow-xl"
+        >
+            <div className="mb-4 flex items-start justify-between">
+                <div>
+                    <h2 className="text-xl font-semibold capitalize text-gray-800 transition group-hover:text-blue-600">
+                        {title}
+                    </h2>
+                    <p className="text-sm text-gray-500">📅 {date}</p>
+                </div>
+                <ArrowRightIcon className="h-5 w-5 text-gray-400 transition group-hover:text-blue-500" />
+            </div>
+
+            <div className="rounded-lg bg-gray-50 p-4">
+                <h3 className="mb-2 text-xs font-semibold text-gray-500">
+                    Total Cost
+                </h3>
+                <div className="flex justify-between text-sm font-medium">
+                    <div>
+                        <span className="block text-gray-600">Client</span>
+                        <span className="text-green-600">
+                            Rp {clientTotal.toLocaleString('id-ID')}
+                        </span>
+                    </div>
+                    <div>
+                        <span className="block text-gray-600">Company</span>
+                        <span className="text-blue-600">
+                            Rp {companyTotal.toLocaleString('id-ID')}
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
 
-export default Card;
+export default ShipmentCard;

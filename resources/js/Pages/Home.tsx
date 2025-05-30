@@ -6,11 +6,11 @@ interface Shipment {
     id: string;
     title: string;
     date: string;
-    client_cost_total?: {
-        total_all: string;
+    client_cost_total: {
+        total_all: number;
     };
-    company_cost_total?: {
-        total_all: string;
+    company_cost_total: {
+        total_all: number;
     };
 }
 
@@ -33,13 +33,23 @@ export default function Home({ shipments }: Props) {
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
                     <div className="grid w-full grid-cols-2 gap-3 px-4 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
-                        <Link href={route('shipments.show', 'ansdansj')}>
-                            <Card />
-                        </Link>
-                        <Card />
-                        <Card />
-                        <Card />
-                        <Card />
+                        {shipments.map((data) => (
+                            <Link
+                                key={data.id}
+                                href={route('shipments.show', data.id)}
+                            >
+                                <Card
+                                    title={data.title}
+                                    date={data.date}
+                                    clientTotal={
+                                        data.client_cost_total.total_all
+                                    }
+                                    companyTotal={
+                                        data.company_cost_total.total_all
+                                    }
+                                />
+                            </Link>
+                        ))}
                     </div>
                 </div>
             </div>
