@@ -3,6 +3,7 @@
 
 import PrimaryButton from '@/Components/PrimaryButton';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { FlatCostItem } from '@/types';
 import { useForm } from '@inertiajs/react';
 import { FormEvent, memo } from 'react';
@@ -229,90 +230,118 @@ const ShipmentCostForm = () => {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-8">
-            {/* CLIENT SIDE */}
-            <div className="space-y-6 border-r pr-4">
-                <h1 className="text-2xl font-bold text-blue-600">
-                    CLIENT REPORT
-                </h1>
+        <div className="mx-auto my-8 max-w-[1440px]">
+            <form onSubmit={handleSubmit} className="w-full">
+                <div className="bg-white px-4 py-4 sm:px-6 lg:px-8">
+                    <div className="space-y-1">
+                        <h3 className="text-lg font-bold">Nama pengiriman</h3>
+                        <Input placeholder="Nama laporan" name="title" />
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 gap-8 bg-white px-4 py-4 sm:px-6 lg:px-8 xl:grid-cols-2">
+                    <div className="space-y-6 border-r pr-4">
+                        <h1 className="text-center text-2xl font-bold">
+                            CLIENT REPORT
+                        </h1>
 
-                <div>
-                    <h2 className="mb-4 text-xl font-bold">Fixed Cost</h2>
-                    <MemoizedCostInputTree
-                        items={fixedCosts.client}
-                        onChange={onClientFixedChange}
-                        onAddSubCost={(parentId) =>
-                            handleClientAddSubCost(parentId, 'fixed')
-                        }
-                        onDelete={onDeleteClientFixed}
-                        showReadOnlyIndicator={false}
-                    />
+                        <div>
+                            <h2 className="mb-4 text-xl font-bold">
+                                Fixed Cost
+                            </h2>
+                            <MemoizedCostInputTree
+                                items={fixedCosts.client}
+                                onChange={onClientFixedChange}
+                                onAddSubCost={(parentId) =>
+                                    handleClientAddSubCost(parentId, 'fixed')
+                                }
+                                onDelete={onDeleteClientFixed}
+                                showReadOnlyIndicator={false}
+                            />
+                        </div>
+
+                        <div>
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-bold">
+                                    Variable Cost
+                                </h2>
+                                <Button
+                                    onClick={() =>
+                                        addVariableCostRoot('client')
+                                    }
+                                    type="button"
+                                >
+                                    + Variable Cost
+                                </Button>
+                            </div>
+
+                            <MemoizedCostInputTree
+                                items={variableCosts.client}
+                                onChange={onClientVariableChange}
+                                onAddSubCost={(parentId) =>
+                                    handleClientAddSubCost(parentId, 'variable')
+                                }
+                                onDelete={onDeleteClientVariable}
+                                showReadOnlyIndicator={false}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-6 pl-4">
+                        <h1 className="text-center text-2xl font-bold">
+                            COMPANY REPORT
+                        </h1>
+
+                        <div>
+                            <h2 className="mb-4 text-xl font-bold">
+                                Fixed Cost
+                            </h2>
+                            <MemoizedCostInputTree
+                                items={fixedCosts.company}
+                                onChange={onCompanyFixedChange}
+                                onAddSubCost={(parentId) =>
+                                    handleCompanyAddSubCost(parentId, 'fixed')
+                                }
+                                onDelete={onDeleteCompanyFixed}
+                                showReadOnlyIndicator={true}
+                            />
+                        </div>
+
+                        <div>
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-bold">
+                                    Variable Cost
+                                </h2>
+                                <Button
+                                    onClick={() =>
+                                        addVariableCostRoot('company')
+                                    }
+                                    type="button"
+                                >
+                                    + Variable Cost (Company Only)
+                                </Button>
+                            </div>
+
+                            <MemoizedCostInputTree
+                                items={variableCosts.company}
+                                onChange={onCompanyVariableChange}
+                                onAddSubCost={(parentId) =>
+                                    handleCompanyAddSubCost(
+                                        parentId,
+                                        'variable',
+                                    )
+                                }
+                                onDelete={onDeleteCompanyVariable}
+                                showReadOnlyIndicator={true}
+                            />
+                        </div>
+                    </div>
                 </div>
 
-                <div>
-                    <h2 className="mb-2 text-xl font-bold">Variable Cost</h2>
-                    <Button
-                        onClick={() => addVariableCostRoot('client')}
-                        className="mb-4"
-                        type="button"
-                    >
-                        + Tambah Variable Cost Baru
-                    </Button>
-                    <MemoizedCostInputTree
-                        items={variableCosts.client}
-                        onChange={onClientVariableChange}
-                        onAddSubCost={(parentId) =>
-                            handleClientAddSubCost(parentId, 'variable')
-                        }
-                        onDelete={onDeleteClientVariable}
-                        showReadOnlyIndicator={false}
-                    />
-                </div>
-            </div>
-
-            {/* COMPANY SIDE */}
-            <div className="space-y-6 pl-4">
-                <h1 className="text-2xl font-bold text-green-600">
-                    COMPANY REPORT
-                </h1>
-
-                <div>
-                    <h2 className="mb-4 text-xl font-bold">Fixed Cost</h2>
-                    <MemoizedCostInputTree
-                        items={fixedCosts.company}
-                        onChange={onCompanyFixedChange}
-                        onAddSubCost={(parentId) =>
-                            handleCompanyAddSubCost(parentId, 'fixed')
-                        }
-                        onDelete={onDeleteCompanyFixed}
-                        showReadOnlyIndicator={true}
-                    />
-                </div>
-
-                <div>
-                    <h2 className="mb-2 text-xl font-bold">Variable Cost</h2>
-                    <Button
-                        onClick={() => addVariableCostRoot('company')}
-                        type="button"
-                        className="mb-4"
-                    >
-                        + Tambah Variable Cost Baru (Company Only)
-                    </Button>
-                    <MemoizedCostInputTree
-                        items={variableCosts.company}
-                        onChange={onCompanyVariableChange}
-                        onAddSubCost={(parentId) =>
-                            handleCompanyAddSubCost(parentId, 'variable')
-                        }
-                        onDelete={onDeleteCompanyVariable}
-                        showReadOnlyIndicator={true}
-                    />
-                </div>
-            </div>
-            <PrimaryButton disabled={processing}>
-                Simpan Semua Biaya
-            </PrimaryButton>
-        </form>
+                <PrimaryButton disabled={processing}>
+                    Simpan Semua Biaya
+                </PrimaryButton>
+            </form>
+        </div>
     );
 };
 

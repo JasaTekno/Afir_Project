@@ -3,7 +3,6 @@ import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import TextInput from './TextInput';
 
 const Navbar = () => {
     const user = usePage().props.auth.user;
@@ -23,9 +22,6 @@ const Navbar = () => {
                         Home
                     </NavLink>
                     <div className="flex items-center gap-5">
-                        <div className="flex w-full max-w-sm items-center space-x-2">
-                            <TextInput type="text" placeholder="Search..." />
-                        </div>
                         <Link href={route('shipment.add')}>Tambah</Link>
                         <div className="hidden sm:flex sm:items-center">
                             <div className="relative ms-3">
