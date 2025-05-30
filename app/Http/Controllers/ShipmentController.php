@@ -12,6 +12,15 @@ use Inertia\Inertia;
 
 class ShipmentController extends Controller
 {
+    public function home()
+    {
+        $shipments = Shipment::with(['clientCostTotal', 'companyCostTotal'])->latest()->get();
+
+        return Inertia::render('Home', [
+            'shipments' => $shipments
+        ]);
+    }
+
     public function add()
     {
         return Inertia::render('Shipment/AddNewShipment');
@@ -53,18 +62,33 @@ class ShipmentController extends Controller
             ]);
 
             $costs = collect($validated['costs']);
+            $costsById = $costs->keyBy('id')->toArray();
 
-            $costs = $costs->map(function ($cost) use ($costs) {
-                if (($cost['calculation_type'] ?? 'manual') === 'multiply_children') {
-                    $children = $costs->where('parent_id', $cost['id']);
-                    $product = $children->reduce(function ($carry, $child) {
-                        return $carry * floatval($child['amount']);
-                    }, 1);
-                    $cost['amount'] = $product;
+            function calculateAmount(string $id, array &$costsById): float {
+                $cost = $costsById[$id];
+
+                if (($cost['calculation_type'] ?? 'manual') === 'manual') {
+                    return floatval($cost['amount']);
                 }
 
-                return $cost;
-            });
+                $children = array_filter($costsById, fn($c) => $c['parent_id'] === $id);
+
+                $product = 1;
+                foreach ($children as $child) {
+                    $product *= calculateAmount($child['id'], $costsById);
+                }
+
+                $costsById[$id]['amount'] = $product;
+                return $product;
+            }
+
+            foreach ($costsById as $id => $cost) {
+                if (($cost['calculation_type'] ?? 'manual') === 'multiply_children') {
+                    calculateAmount($id, $costsById);
+                }
+            }
+
+            $costs = collect(array_values($costsById));
 
             $parents = $costs->filter(fn($cost) => empty($cost['parent_id']));
             $children = $costs->filter(fn($cost) => !empty($cost['parent_id']));

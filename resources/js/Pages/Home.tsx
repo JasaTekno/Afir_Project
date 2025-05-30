@@ -2,7 +2,24 @@ import Card from '@/Components/Card';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
-export default function Home() {
+interface Shipment {
+    id: string;
+    title: string;
+    date: string;
+    client_cost_total?: {
+        total_all: string;
+    };
+    company_cost_total?: {
+        total_all: string;
+    };
+}
+
+interface Props {
+    shipments: Shipment[];
+}
+
+export default function Home({ shipments }: Props) {
+    console.log(shipments);
     return (
         <AuthenticatedLayout
             header={
