@@ -278,7 +278,7 @@ const ShipmentCostForm = () => {
                         </div>
 
                         <div>
-                            <div className="flex items-center justify-between">
+                            <div className="mb-5 flex items-center justify-between">
                                 <h2 className="text-xl font-bold">
                                     Variable Cost
                                 </h2>
@@ -325,7 +325,7 @@ const ShipmentCostForm = () => {
                         </div>
 
                         <div>
-                            <div className="flex items-center justify-between">
+                            <div className="mb-5 flex items-center justify-between">
                                 <h2 className="text-xl font-bold">
                                     Variable Cost
                                 </h2>

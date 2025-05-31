@@ -1,7 +1,7 @@
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Link, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 const Navbar = () => {
@@ -22,7 +22,6 @@ const Navbar = () => {
                         Home
                     </NavLink>
                     <div className="flex items-center gap-5">
-                        <Link href={route('shipment.add')}>Tambah</Link>
                         <div className="hidden sm:flex sm:items-center">
                             <div className="relative ms-3">
                                 <Dropdown>

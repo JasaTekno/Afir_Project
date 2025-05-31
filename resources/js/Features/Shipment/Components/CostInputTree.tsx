@@ -68,21 +68,23 @@ export function CostInputTree({
                         >
                             + Sub
                         </Button>
-                        <select
-                            value={item.calculationType ?? 'manual'}
-                            onChange={(e) =>
-                                onChange(
-                                    item.id,
-                                    'calculationType',
-                                    e.target.value,
-                                )
-                            }
-                        >
-                            <option value="manual">Manual</option>
-                            <option value="multiply_children">
-                                Kali Sub-Cost
-                            </option>
-                        </select>
+                        {item.costType === 'variable' && (
+                            <select
+                                value={item.calculationType}
+                                onChange={(e) =>
+                                    onChange(
+                                        item.id,
+                                        'calculationType',
+                                        e.target.value,
+                                    )
+                                }
+                            >
+                                <option value="manual">Manual</option>
+                                <option value="multiply_children">
+                                    Kali Sub-Cost
+                                </option>
+                            </select>
+                        )}
                         <Button
                             variant="destructive"
                             size="sm"

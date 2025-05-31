@@ -13,7 +13,6 @@ export default function Authenticated({
                 <header className="bg-white shadow">
                     <div className="mx-auto flex max-w-7xl justify-between px-4 py-6 sm:px-6 lg:px-8">
                         {header}
-                        <div>Sort by</div>
                     </div>
                 </header>
             )}

@@ -5,27 +5,17 @@ interface Props {
     date: string;
     clientTotal: number;
     companyTotal: number;
-    onClick?: () => void;
 }
 
-const ShipmentCard = ({
-    title,
-    date,
-    clientTotal,
-    companyTotal,
-    onClick,
-}: Props) => {
+const ShipmentCard = ({ title, date, clientTotal, companyTotal }: Props) => {
     return (
-        <div
-            onClick={onClick}
-            className="group relative cursor-pointer rounded-xl border bg-white p-6 shadow-md transition hover:shadow-xl"
-        >
+        <div className="group relative w-full cursor-pointer rounded-xl border bg-white p-6 shadow-md transition hover:shadow-xl">
             <div className="mb-4 flex items-start justify-between">
-                <div>
+                <div className="space-y-1">
                     <h2 className="text-xl font-semibold capitalize text-gray-800 transition group-hover:text-blue-600">
                         {title}
                     </h2>
-                    <p className="text-sm text-gray-500">📅 {date}</p>
+                    <p className="text-xs text-gray-500">📅 {date}</p>
                 </div>
                 <ArrowRightIcon className="h-5 w-5 text-gray-400 transition group-hover:text-blue-500" />
             </div>

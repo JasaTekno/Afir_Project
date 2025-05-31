@@ -19,24 +19,30 @@ interface Props {
 }
 
 export default function Home({ shipments }: Props) {
-    console.log(shipments);
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    All shipments report
-                </h2>
+                <>
+                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                        All shipments report
+                    </h2>
+                    <div className="flex items-center gap-4">
+                        <button></button>
+                        <Link href={route('shipment.add')}>Tambah</Link>
+                    </div>
+                </>
             }
         >
-            <Head title="Dashboard" />
+            <Head title="Home" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <div className="grid w-full grid-cols-2 gap-3 px-4 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
+                    <div className="grid w-full grid-cols-1 gap-3 px-4 md:grid-cols-2 md:gap-4 lg:grid-cols-3 xl:grid-cols-4">
                         {shipments.map((data) => (
                             <Link
                                 key={data.id}
                                 href={route('shipments.show', data.id)}
+                                className="w-full"
                             >
                                 <Card
                                     title={data.title}

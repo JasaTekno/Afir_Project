@@ -10,6 +10,7 @@ export type CostItemBase = {
     side: 'client' | 'company';
     children: DualCostItem[];
     calculationType: 'manual' | 'multiply_children';
+    costType: 'fixed' | 'variable';
 };
 
 export type DualCostItem = CostItemBase & {
@@ -63,6 +64,7 @@ export const useShipmentCostForm = () => {
     const generateDualCostItem = (base: {
         name: string;
         parentId: string | null;
+        costType: 'fixed' | 'variable';
     }): [DualCostItem, DualCostItem] => {
         const clientId = uuidv4();
         const companyId = uuidv4();
@@ -76,6 +78,7 @@ export const useShipmentCostForm = () => {
             children: [],
             isClientOwned: true,
             calculationType: 'manual',
+            costType: base.costType,
         };
 
         const companyItem: DualCostItem = {
@@ -88,6 +91,7 @@ export const useShipmentCostForm = () => {
             isClientOwned: false,
             mirroredFromId: clientId,
             calculationType: 'manual',
+            costType: base.costType,
         };
 
         return [clientItem, companyItem];
@@ -101,6 +105,7 @@ export const useShipmentCostForm = () => {
             const [clientItem, companyItem] = generateDualCostItem({
                 name: item.name,
                 parentId: null,
+                costType: 'fixed',
             });
             clientItems.push(clientItem);
             companyItems.push(companyItem);
@@ -162,6 +167,7 @@ export const useShipmentCostForm = () => {
                 children: [],
                 isClientOwned: true,
                 calculationType: 'manual',
+                costType: costType,
             };
 
             // Create mirror for company side
@@ -201,6 +207,7 @@ export const useShipmentCostForm = () => {
                 children: [],
                 isClientOwned: false,
                 calculationType: 'manual',
+                costType: costType,
             };
 
             const newCompany = addSubCostToParent(
@@ -225,6 +232,7 @@ export const useShipmentCostForm = () => {
                 children: [],
                 isClientOwned: true,
                 calculationType: 'manual',
+                costType: 'variable',
             };
 
             const newCompanyItem = mirrorClientItem(newClientItem);
@@ -243,6 +251,7 @@ export const useShipmentCostForm = () => {
                 children: [],
                 isClientOwned: false,
                 calculationType: 'manual',
+                costType: 'variable',
             };
 
             setVariableCosts((prev) => ({
