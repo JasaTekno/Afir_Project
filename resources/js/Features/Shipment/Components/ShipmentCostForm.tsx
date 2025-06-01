@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { formatted } from '@/lib/utils';
 import { FlatCostItem } from '@/types';
 import { useForm } from '@inertiajs/react';
 import { Building2, Calendar, Plus, Ship, User } from 'lucide-react';
@@ -19,6 +20,7 @@ import {
     flattenCostTree,
     useShipmentCostForm,
 } from '../Hooks/useShipmentCostForm';
+import { useCostTotals } from '../Hooks/useTotalCost';
 import { CostInputTree } from './CostInputTree';
 
 const MemoizedCostInputTree = memo(CostInputTree);
@@ -33,6 +35,17 @@ const ShipmentCostForm = () => {
         handleCompanyAddSubCost,
         addVariableCostRoot,
     } = useShipmentCostForm();
+
+    const {
+        fixedClientCost,
+        fixedCompanyCost,
+        variableClientCost,
+        variableCompanyCost,
+        totalClientCost,
+        totalCompanyCost,
+    } = useCostTotals(fixedCosts, variableCosts);
+
+    console.log(fixedCosts.company);
 
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(
         new Date(),
@@ -56,7 +69,6 @@ const ShipmentCostForm = () => {
     ): DualCostItem[] =>
         list.map((item) => {
             if (item.id === id) {
-                console.log(`Update item ${id} field ${field} to`, value);
                 return { ...item, [field]: value };
             }
             return {
@@ -295,7 +307,7 @@ const ShipmentCostForm = () => {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            <div>
+                            <div className="space-y-3">
                                 <div className="mb-4 flex items-center justify-between">
                                     <h3 className="font-semibold text-gray-800">
                                         Fixed Cost
@@ -322,6 +334,10 @@ const ShipmentCostForm = () => {
                                         showReadOnlyIndicator={false}
                                     />
                                 </div>
+                                <h3 className="text-right text-sm text-green-700">
+                                    Total Fixed Cost:{' '}
+                                    {formatted(fixedClientCost)}
+                                </h3>
                             </div>
 
                             <Separator />
@@ -353,6 +369,10 @@ const ShipmentCostForm = () => {
                                         showReadOnlyIndicator={false}
                                     />
                                 </div>
+                                <h3 className="text-right text-sm text-green-700">
+                                    Total Variable Cost:{' '}
+                                    {formatted(variableClientCost)}
+                                </h3>
                                 <Button
                                     variant="outline"
                                     className="w-full border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50"
@@ -377,7 +397,7 @@ const ShipmentCostForm = () => {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            <div>
+                            <div className="space-y-3">
                                 <div className="mb-4 flex items-center justify-between">
                                     <h3 className="font-semibold text-gray-800">
                                         Fixed Cost
@@ -404,6 +424,10 @@ const ShipmentCostForm = () => {
                                         showReadOnlyIndicator={true}
                                     />
                                 </div>
+                                <h3 className="text-right text-sm text-blue-700">
+                                    Total Fixed Cost:{' '}
+                                    {formatted(fixedCompanyCost)}
+                                </h3>
                             </div>
 
                             <Separator />

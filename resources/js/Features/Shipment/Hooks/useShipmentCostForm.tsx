@@ -36,7 +36,6 @@ export const flattenCostTree = (
     parentId: string | null = null,
 ): FlatCostItem[] => {
     return items.flatMap((item) => {
-        console.log(item);
         const current: FlatCostItem = {
             id: item.id,
             name: item.name,
@@ -176,17 +175,14 @@ export const useShipmentCostForm = () => {
                 costType: costType,
             };
 
-            // Create mirror for company side
             const newCompanySubCost = createMirrorItem(newClientSubCost);
 
-            // Add to client side
             const newClient = addSubCostToParent(
                 prev.client,
                 parentId,
                 newClientSubCost,
             );
 
-            // Add to company side (find parent by mirroredFromId)
             const newCompany = addSubCostToMirroredParent(
                 prev.company,
                 parentId,
@@ -221,6 +217,8 @@ export const useShipmentCostForm = () => {
                 parentId,
                 newCompanySubCost,
             );
+
+            console.log('Updated tree:', JSON.stringify(newCompany, null, 2));
 
             return { ...prev, company: newCompany };
         });
