@@ -1,9 +1,15 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useMemo } from 'react';
 import { DualCostItem } from './useShipmentCostForm';
 
 const calculateAmount = (item: DualCostItem): number => {
     if (item.calculationType === 'manual') {
-        return Number(item.amount);
+        const selfAmount = Number(item.amount) || 0;
+        const childrenAmount = item.children.reduce(
+            (acc, child) => acc + calculateAmount(child),
+            0,
+        );
+        return selfAmount + childrenAmount;
     } else if (item.calculationType === 'multiply_children') {
         if (!item.children || item.children.length === 0) return 0;
         return item.children.reduce(
@@ -22,17 +28,15 @@ export const useCostTotals = (
     fixedCosts: { client: DualCostItem[]; company: DualCostItem[] },
     variableCosts: { client: DualCostItem[]; company: DualCostItem[] },
 ) => {
-    console.log('fixedCosts.company', fixedCosts.company);
-    console.log('variableCosts.company', variableCosts.company);
     const fixedClientCost = useMemo(
         () => sumTotalAmount(fixedCosts.client),
         [fixedCosts.client],
     );
 
-    const fixedCompanyCost = useMemo(() => {
-        console.log('Recalculate fixedCompanyCost');
-        return sumTotalAmount(fixedCosts.company);
-    }, [fixedCosts.company]);
+    const fixedCompanyCost = useMemo(
+        () => sumTotalAmount(fixedCosts.company),
+        [fixedCosts.company],
+    );
 
     const variableClientCost = useMemo(
         () => sumTotalAmount(variableCosts.client),

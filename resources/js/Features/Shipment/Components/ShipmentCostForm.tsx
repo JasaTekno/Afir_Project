@@ -45,8 +45,6 @@ const ShipmentCostForm = () => {
         totalCompanyCost,
     } = useCostTotals(fixedCosts, variableCosts);
 
-    console.log(fixedCosts.company);
-
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(
         new Date(),
     );
@@ -253,7 +251,7 @@ const ShipmentCostForm = () => {
     };
 
     return (
-        <div className="mx-auto mt-8 h-full max-w-[1440px]">
+        <div className="mx-auto mt-8 min-h-dvh max-w-[1440px]">
             <form onSubmit={handleSubmit} className="w-full">
                 <Card className="mb-8 border-0 bg-white shadow-sm">
                     <CardHeader className="pb-4">
@@ -459,6 +457,10 @@ const ShipmentCostForm = () => {
                                         showReadOnlyIndicator={true}
                                     />
                                 </div>
+                                <h3 className="text-right text-sm text-blue-700">
+                                    Total Variable Cost:{' '}
+                                    {formatted(variableCompanyCost)}
+                                </h3>
                                 <Button
                                     variant="outline"
                                     className="w-full border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50"
@@ -475,9 +477,23 @@ const ShipmentCostForm = () => {
                     </Card>
                 </div>
 
-                <PrimaryButton disabled={processing}>
-                    Simpan Semua Biaya
-                </PrimaryButton>
+                <div className="flex flex-col gap-4">
+                    <div className="space-y-1">
+                        <h3 className="text-right text-sm text-green-700">
+                            Total Cost Client: {formatted(totalClientCost)}
+                        </h3>
+                        <h3 className="text-right text-sm text-blue-700">
+                            Total Cost Company: {formatted(totalCompanyCost)}
+                        </h3>
+                    </div>
+
+                    <PrimaryButton
+                        disabled={processing}
+                        className="ml-auto text-center"
+                    >
+                        Simpan Semua Biaya
+                    </PrimaryButton>
+                </div>
             </form>
         </div>
     );

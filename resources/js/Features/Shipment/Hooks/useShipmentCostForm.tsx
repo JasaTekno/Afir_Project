@@ -162,7 +162,6 @@ export const useShipmentCostForm = () => {
             costType === 'fixed' ? setFixedCosts : setVariableCosts;
 
         setCosts((prev) => {
-            // Create new client sub-cost
             const newClientSubCost: DualCostItem = {
                 id: uuidv4(),
                 name: '',
@@ -218,8 +217,6 @@ export const useShipmentCostForm = () => {
                 newCompanySubCost,
             );
 
-            console.log('Updated tree:', JSON.stringify(newCompany, null, 2));
-
             return { ...prev, company: newCompany };
         });
     };
@@ -265,7 +262,6 @@ export const useShipmentCostForm = () => {
         }
     };
 
-    // Helper function to find parent by mirroredFromId and add sub-cost
     const addSubCostToMirroredParent = (
         list: DualCostItem[],
         parentMirroredFromId: string,
@@ -288,7 +284,6 @@ export const useShipmentCostForm = () => {
             };
         });
 
-    // Create mirror of client item
     const createMirrorItem = (clientItem: DualCostItem): DualCostItem => ({
         ...clientItem,
         id: uuidv4(),
