@@ -1,3 +1,4 @@
+import { formatted } from '@/lib/utils';
 import { ArrowRightIcon } from 'lucide-react';
 
 interface Props {
@@ -28,13 +29,13 @@ const ShipmentCard = ({ title, date, clientTotal, companyTotal }: Props) => {
                     <div>
                         <span className="block text-gray-600">Client</span>
                         <span className="text-green-600">
-                            Rp {clientTotal.toLocaleString('id-ID')}
+                            {formatted(clientTotal)}
                         </span>
                     </div>
                     <div>
                         <span className="block text-gray-600">Company</span>
                         <span className="text-blue-600">
-                            Rp {companyTotal.toLocaleString('id-ID')}
+                            {formatted(companyTotal)}
                         </span>
                     </div>
                 </div>

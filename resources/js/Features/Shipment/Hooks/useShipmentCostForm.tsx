@@ -52,6 +52,12 @@ export const flattenCostTree = (
     });
 };
 
+export const countCostItems = (items: DualCostItem[]): number => {
+    return items.reduce((acc, item) => {
+        return acc + 1 + countCostItems(item.children);
+    }, 0);
+};
+
 export const useShipmentCostForm = () => {
     const initialFixedCosts = [
         { name: 'Gaji Crew' },

@@ -3,12 +3,18 @@
 
 import DatePicker from '@/Components/DatePicker';
 import PrimaryButton from '@/Components/PrimaryButton';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { FlatCostItem } from '@/types';
 import { useForm } from '@inertiajs/react';
+import { Building2, Calendar, Plus, Ship, User } from 'lucide-react';
 import { FormEvent, memo, useState } from 'react';
 import {
+    countCostItems,
     DualCostItem,
     flattenCostTree,
     useShipmentCostForm,
@@ -235,124 +241,214 @@ const ShipmentCostForm = () => {
     };
 
     return (
-        <div className="mx-auto my-8 max-w-[1440px]">
+        <div className="mx-auto mt-8 h-full max-w-[1440px]">
             <form onSubmit={handleSubmit} className="w-full">
-                <div className="bg-white px-4 py-4 sm:px-6 lg:px-8">
-                    <div className="space-y-1">
-                        <h3 className="text-lg font-bold">Nama pengiriman</h3>
-                        <Input
-                            placeholder="Nama laporan"
-                            name="title"
-                            required
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <h3 className="text-lg font-bold">
-                            Tanggal Pengiriman
-                        </h3>
-                        <DatePicker
-                            value={selectedDate}
-                            onChange={setSelectedDate}
-                        />
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 gap-8 bg-white px-4 py-4 sm:px-6 lg:px-8 xl:grid-cols-2">
-                    <div className="space-y-6 border-r pr-4">
-                        <h1 className="text-center text-2xl font-bold">
-                            CLIENT REPORT
-                        </h1>
-
-                        <div>
-                            <h2 className="mb-4 text-xl font-bold">
-                                Fixed Cost
-                            </h2>
-                            <MemoizedCostInputTree
-                                items={fixedCosts.client}
-                                onChange={onClientFixedChange}
-                                onAddSubCost={(parentId) =>
-                                    handleClientAddSubCost(parentId, 'fixed')
-                                }
-                                onDelete={onDeleteClientFixed}
-                                showReadOnlyIndicator={false}
-                            />
+                <Card className="mb-8 border-0 bg-white shadow-sm">
+                    <CardHeader className="pb-4">
+                        <CardTitle className="flex items-center gap-2 text-gray-900">
+                            <Ship className="h-5 w-5 text-blue-600" />
+                            Informasi Pengiriman
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label
+                                    htmlFor="shipment-name"
+                                    className="font-medium text-gray-700"
+                                >
+                                    Nama Pengiriman
+                                </Label>
+                                <Input
+                                    id="title"
+                                    placeholder="Nama laporan"
+                                    className="border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label
+                                    htmlFor="shipment-date"
+                                    className="font-medium text-gray-700"
+                                >
+                                    Tanggal Pengiriman
+                                </Label>
+                                <div className="relative">
+                                    <DatePicker
+                                        value={selectedDate}
+                                        onChange={setSelectedDate}
+                                        className="pl-10"
+                                    />
+                                    <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+                                </div>
+                            </div>
                         </div>
+                    </CardContent>
+                </Card>
 
-                        <div>
-                            <div className="mb-5 flex items-center justify-between">
-                                <h2 className="text-xl font-bold">
-                                    Variable Cost
-                                </h2>
+                <div className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+                    {/* Client Report */}
+                    <Card className="border-0 bg-white shadow-sm">
+                        <CardHeader className="pb-4">
+                            <CardTitle className="flex items-center gap-2 text-gray-900">
+                                <User className="h-5 w-5 text-green-600" />
+                                CLIENT REPORT
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div>
+                                <div className="mb-4 flex items-center justify-between">
+                                    <h3 className="font-semibold text-gray-800">
+                                        Fixed Cost
+                                    </h3>
+                                    <Badge
+                                        variant="outline"
+                                        className="border-green-200 bg-green-50 text-green-700"
+                                    >
+                                        {countCostItems(fixedCosts.client)}{' '}
+                                        Items
+                                    </Badge>
+                                </div>
+                                <div className="space-y-3">
+                                    <MemoizedCostInputTree
+                                        items={fixedCosts.client}
+                                        onChange={onClientFixedChange}
+                                        onAddSubCost={(parentId) =>
+                                            handleClientAddSubCost(
+                                                parentId,
+                                                'fixed',
+                                            )
+                                        }
+                                        onDelete={onDeleteClientFixed}
+                                        showReadOnlyIndicator={false}
+                                    />
+                                </div>
+                            </div>
+
+                            <Separator />
+
+                            <div className="space-y-4">
+                                <div className="mb-4 flex items-center justify-between">
+                                    <h3 className="font-semibold text-gray-800">
+                                        Variable Cost
+                                    </h3>
+                                    <Badge
+                                        variant="outline"
+                                        className="border-green-200 bg-green-50 text-green-700"
+                                    >
+                                        {countCostItems(variableCosts.client)}{' '}
+                                        Items
+                                    </Badge>
+                                </div>
+                                <div className="space-y-3">
+                                    <MemoizedCostInputTree
+                                        items={variableCosts.client}
+                                        onChange={onClientVariableChange}
+                                        onAddSubCost={(parentId) =>
+                                            handleClientAddSubCost(
+                                                parentId,
+                                                'variable',
+                                            )
+                                        }
+                                        onDelete={onDeleteClientVariable}
+                                        showReadOnlyIndicator={false}
+                                    />
+                                </div>
                                 <Button
+                                    variant="outline"
+                                    className="w-full border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+                                    type="button"
                                     onClick={() =>
                                         addVariableCostRoot('client')
                                     }
-                                    type="button"
                                 >
-                                    + Variable Cost
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Variable Cost
                                 </Button>
                             </div>
+                        </CardContent>
+                    </Card>
 
-                            <MemoizedCostInputTree
-                                items={variableCosts.client}
-                                onChange={onClientVariableChange}
-                                onAddSubCost={(parentId) =>
-                                    handleClientAddSubCost(parentId, 'variable')
-                                }
-                                onDelete={onDeleteClientVariable}
-                                showReadOnlyIndicator={false}
-                            />
-                        </div>
-                    </div>
+                    {/* Company Report */}
+                    <Card className="border-0 bg-white shadow-sm">
+                        <CardHeader className="pb-4">
+                            <CardTitle className="flex items-center gap-2 text-gray-900">
+                                <Building2 className="h-5 w-5 text-blue-600" />
+                                COMPANY REPORT
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div>
+                                <div className="mb-4 flex items-center justify-between">
+                                    <h3 className="font-semibold text-gray-800">
+                                        Fixed Cost
+                                    </h3>
+                                    <Badge
+                                        variant="outline"
+                                        className="border-blue-200 bg-blue-50 text-blue-700"
+                                    >
+                                        {countCostItems(fixedCosts.company)}{' '}
+                                        Items
+                                    </Badge>
+                                </div>
+                                <div className="space-y-3">
+                                    <MemoizedCostInputTree
+                                        items={fixedCosts.company}
+                                        onChange={onCompanyFixedChange}
+                                        onAddSubCost={(parentId) =>
+                                            handleCompanyAddSubCost(
+                                                parentId,
+                                                'fixed',
+                                            )
+                                        }
+                                        onDelete={onDeleteCompanyFixed}
+                                        showReadOnlyIndicator={true}
+                                    />
+                                </div>
+                            </div>
 
-                    <div className="space-y-6 pl-4">
-                        <h1 className="text-center text-2xl font-bold">
-                            COMPANY REPORT
-                        </h1>
+                            <Separator />
 
-                        <div>
-                            <h2 className="mb-4 text-xl font-bold">
-                                Fixed Cost
-                            </h2>
-                            <MemoizedCostInputTree
-                                items={fixedCosts.company}
-                                onChange={onCompanyFixedChange}
-                                onAddSubCost={(parentId) =>
-                                    handleCompanyAddSubCost(parentId, 'fixed')
-                                }
-                                onDelete={onDeleteCompanyFixed}
-                                showReadOnlyIndicator={true}
-                            />
-                        </div>
-
-                        <div>
-                            <div className="mb-5 flex items-center justify-between">
-                                <h2 className="text-xl font-bold">
-                                    Variable Cost
-                                </h2>
+                            <div className="space-y-4">
+                                <div className="mb-4 flex items-center justify-between">
+                                    <h3 className="font-semibold text-gray-800">
+                                        Variable Cost
+                                    </h3>
+                                    <Badge
+                                        variant="outline"
+                                        className="border-blue-200 bg-blue-50 text-blue-700"
+                                    >
+                                        {countCostItems(variableCosts.company)}{' '}
+                                        Items
+                                    </Badge>
+                                </div>
+                                <div className="space-y-3">
+                                    <MemoizedCostInputTree
+                                        items={variableCosts.company}
+                                        onChange={onCompanyVariableChange}
+                                        onAddSubCost={(parentId) =>
+                                            handleCompanyAddSubCost(
+                                                parentId,
+                                                'variable',
+                                            )
+                                        }
+                                        onDelete={onDeleteCompanyVariable}
+                                        showReadOnlyIndicator={true}
+                                    />
+                                </div>
                                 <Button
+                                    variant="outline"
+                                    className="w-full border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+                                    type="button"
                                     onClick={() =>
                                         addVariableCostRoot('company')
                                     }
-                                    type="button"
                                 >
-                                    + Variable Cost (Company Only)
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Variable Cost (Company Only)
                                 </Button>
                             </div>
-
-                            <MemoizedCostInputTree
-                                items={variableCosts.company}
-                                onChange={onCompanyVariableChange}
-                                onAddSubCost={(parentId) =>
-                                    handleCompanyAddSubCost(
-                                        parentId,
-                                        'variable',
-                                    )
-                                }
-                                onDelete={onDeleteCompanyVariable}
-                                showReadOnlyIndicator={true}
-                            />
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 <PrimaryButton disabled={processing}>
