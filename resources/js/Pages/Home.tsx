@@ -127,11 +127,11 @@ export default function Home({ shipments }: Props) {
                             />
                         )}
 
-                        <Button onClick={applyFilter}>Terapkan Filter</Button>
+                        <Button onClick={applyFilter}>Apply Filter</Button>
                     </div>
 
                     <Link href={route('shipment.add')}>
-                        <Button variant="outline">+ Tambah Shipment</Button>
+                        <Button variant="outline">+ Add New Shipment</Button>
                     </Link>
                 </div>
             }

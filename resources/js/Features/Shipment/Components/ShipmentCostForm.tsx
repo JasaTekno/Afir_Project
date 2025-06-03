@@ -257,7 +257,7 @@ const ShipmentCostForm = () => {
                     <CardHeader className="pb-4">
                         <CardTitle className="flex items-center gap-2 text-gray-900">
                             <Ship className="h-5 w-5 text-blue-600" />
-                            Informasi Pengiriman
+                            SHIPMENT INFORMATION
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -267,7 +267,7 @@ const ShipmentCostForm = () => {
                                     htmlFor="shipment-name"
                                     className="font-medium text-gray-700"
                                 >
-                                    Nama Pengiriman
+                                    Shipping Name
                                 </Label>
                                 <Input
                                     id="title"
@@ -289,7 +289,7 @@ const ShipmentCostForm = () => {
                                     htmlFor="shipment-date"
                                     className="font-medium text-gray-700"
                                 >
-                                    Tanggal Pengiriman
+                                    Delivery Date
                                 </Label>
                                 <div className="relative">
                                     <DatePicker
@@ -511,7 +511,7 @@ const ShipmentCostForm = () => {
                         disabled={processing}
                         className="ml-auto text-center"
                     >
-                        Simpan Semua Biaya
+                        Save all cost
                     </PrimaryButton>
                 </div>
             </form>
