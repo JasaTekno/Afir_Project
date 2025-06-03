@@ -49,7 +49,7 @@ const ShipmentCostForm = () => {
         new Date(),
     );
 
-    const { data, post, processing } = useForm<{
+    const { data, setData, post, processing, errors } = useForm<{
         title: string;
         date: string;
         costs: FlatCostItem[];
@@ -251,7 +251,7 @@ const ShipmentCostForm = () => {
     };
 
     return (
-        <div className="mx-auto mt-8 min-h-dvh max-w-[1440px]">
+        <div className="mx-auto mt-4 max-w-[1440px] py-8">
             <form onSubmit={handleSubmit} className="w-full">
                 <Card className="mb-8 border-0 bg-white shadow-sm">
                     <CardHeader className="pb-4">
@@ -272,8 +272,17 @@ const ShipmentCostForm = () => {
                                 <Input
                                     id="title"
                                     placeholder="Nama laporan"
+                                    value={data.title}
+                                    onChange={(e) =>
+                                        setData('title', e.target.value)
+                                    }
                                     className="border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                                 />
+                                {errors.title && (
+                                    <p className="mt-1 text-sm text-red-500">
+                                        {errors.title}
+                                    </p>
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label
@@ -285,11 +294,22 @@ const ShipmentCostForm = () => {
                                 <div className="relative">
                                     <DatePicker
                                         value={selectedDate}
-                                        onChange={setSelectedDate}
+                                        onChange={(date) => {
+                                            setSelectedDate(date);
+                                            setData(
+                                                'date',
+                                                date?.toISOString() ?? '',
+                                            );
+                                        }}
                                         className="pl-10"
                                     />
                                     <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                                 </div>
+                                {errors.date && (
+                                    <p className="mt-1 text-sm text-red-500">
+                                        {errors.date}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </CardContent>

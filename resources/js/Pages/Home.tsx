@@ -27,8 +27,9 @@ export default function Home({ shipments }: Props) {
                         All shipments report
                     </h2>
                     <div className="flex items-center gap-4">
-                        <button></button>
-                        <Link href={route('shipment.add')}>Tambah</Link>
+                        <Link href={route('shipment.add')}>
+                            + Add New Shipment
+                        </Link>
                     </div>
                 </>
             }

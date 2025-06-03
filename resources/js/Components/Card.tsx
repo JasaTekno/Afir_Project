@@ -25,7 +25,7 @@ const ShipmentCard = ({ title, date, clientTotal, companyTotal }: Props) => {
                 <h3 className="mb-2 text-xs font-semibold text-gray-500">
                     Total Cost
                 </h3>
-                <div className="flex justify-between text-sm font-medium">
+                <div className="flex flex-col gap-2 text-sm font-medium">
                     <div>
                         <span className="block text-gray-600">Client</span>
                         <span className="text-green-600">

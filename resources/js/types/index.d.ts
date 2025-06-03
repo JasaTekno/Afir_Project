@@ -40,3 +40,31 @@ export type ShipmentCostFormProps = {
         amount: string | null;
     }[];
 };
+
+export type ShipmentDetailProps = {
+    shipment: {
+        id: string;
+        title: string;
+        date: string;
+        created_at: string;
+        updated_at: string;
+        cost_items: CostItemDetail[];
+        client_cost_total: ShipmentCostTotal;
+        company_cost_total: ShipmentCostTotal;
+    };
+};
+
+type ShipmentCostTotal = {
+    total_fixed: string;
+    total_variable: string;
+    total_all: string;
+};
+
+type CostItemDetail = {
+    id: string;
+    name: string;
+    amount: string;
+    side: 'client' | 'company';
+    calculation_type: 'manual' | 'multiply_children';
+    parent_id: string | null;
+};
