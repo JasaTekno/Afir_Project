@@ -1,7 +1,7 @@
 import { ShipmentDetailProps } from '@/types';
 import { Document, Page, Text, View } from '@react-pdf/renderer';
 import { buildCostTree } from './CostTree/buildCostTree';
-import { CostItemTree } from './CostTree/CostItemTree';
+import { GroupedCostItemTree } from './CostTree/GroupedCostItemTree';
 import InfoSection from './sections/InfoSection';
 import SummarySection from './sections/SummarySection';
 import { styles } from './styles';
@@ -31,7 +31,7 @@ export const ShipmentPDF = ({
                         <Text style={styles.costHeaderText}>AMOUNT</Text>
                     </View>
                     <View style={styles.costBody}>
-                        {CostItemTree(costTree)}
+                        <GroupedCostItemTree items={costTree} />
                     </View>
                 </View>
 

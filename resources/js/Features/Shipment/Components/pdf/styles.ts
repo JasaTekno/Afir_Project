@@ -109,6 +109,18 @@ export const styles = StyleSheet.create({
         minWidth: 100,
         textAlign: 'right',
     },
+    costGroupSeparator: {
+        marginTop: 12,
+        marginBottom: 6,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc',
+        paddingBottom: 4,
+    },
+    costGroupTitle: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#333',
+    },
     level0: { paddingLeft: 0, fontWeight: 'bold' },
     level1: { paddingLeft: 16, fontSize: 9 },
     level2: { paddingLeft: 32, fontSize: 9, color: '#6b7280' },
