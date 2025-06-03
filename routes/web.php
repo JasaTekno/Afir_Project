@@ -20,7 +20,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('/home', [ShipmentController::class, 'home'])->name('home');
+    Route::get('/home', [ShipmentController::class, 'index'])->name('home');
     Route::get('/shipments/{shipment}', [ShipmentController::class, 'show'])->name('shipments.show');
     Route::get('/add-shipment', [ShipmentController::class, 'add'])->name('shipment.add');
     Route::post('/shipments/costs', [ShipmentController::class, 'store'])->name('shipments.costs.store');

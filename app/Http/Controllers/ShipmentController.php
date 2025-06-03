@@ -8,17 +8,40 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 class ShipmentController extends Controller
 {
-    public function home()
+    public function index(Request $request)
     {
-        $shipments = Shipment::with(['clientCostTotal', 'companyCostTotal'])->latest()->get();
+        $query = Shipment::query();
+
+        if ($request->filterType && $request->filterValue) {
+            switch ($request->filterType) {
+                case 'daily':
+                    $query->whereDate('date', $request->filterValue);
+                    break;
+                case 'range':
+                    [$start, $end] = explode('|', $request->filterValue);
+                    $query->whereBetween('date', [$start, $end]);
+                    break;
+                case 'monthly':
+                    $query->whereYear('date', Carbon::parse($request->filterValue)->year)
+                        ->whereMonth('date', Carbon::parse($request->filterValue)->month);
+                    break;
+                case 'yearly':
+                    $query->whereYear('date', $request->filterValue);
+                    break;
+            }
+        }
+
+        $shipments = $query->with(['clientCostTotal', 'companyCostTotal'])->get();
 
         return Inertia::render('Home', [
-            'shipments' => $shipments
+            'shipments' => $shipments,
         ]);
     }
+
 
     public function add()
     {
