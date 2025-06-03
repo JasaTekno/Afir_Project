@@ -1,4 +1,5 @@
 import Card from '@/Components/Card';
+import PrimaryButton from '@/Components/PrimaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
@@ -28,7 +29,7 @@ export default function Home({ shipments }: Props) {
                     </h2>
                     <div className="flex items-center gap-4">
                         <Link href={route('shipment.add')}>
-                            + Add New Shipment
+                            <PrimaryButton>+ Add New Shipment</PrimaryButton>
                         </Link>
                     </div>
                 </>

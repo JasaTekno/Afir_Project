@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -7,9 +8,11 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { ShipmentPDF } from '@/Features/Shipment/Components/pdf/ShipmentPdf';
 import Authenticated from '@/Layouts/AuthenticatedLayout';
 import { formatted } from '@/lib/utils';
 import { ShipmentDetailProps } from '@/types';
+import { PDFDownloadLink } from '@react-pdf/renderer';
 import {
     Building2,
     CalendarDays,
@@ -19,6 +22,7 @@ import {
     TrendingUp,
     User,
 } from 'lucide-react';
+import { useMemo } from 'react';
 
 const ShowShipmentDetail = ({ shipment }: ShipmentDetailProps) => {
     const clientCosts = shipment.cost_items.filter(
@@ -41,11 +45,14 @@ const ShowShipmentDetail = ({ shipment }: ShipmentDetailProps) => {
         allItems,
         level,
     }: {
-        item: any;
-        allItems: any[];
+        item: ShipmentDetailProps['shipment']['cost_items'][number];
+        allItems: ShipmentDetailProps['shipment']['cost_items'];
         level: number;
     }) => {
-        const children = allItems.filter((i) => i.parent_id === item.id);
+        const children = useMemo(
+            () => allItems.filter((i) => i.parent_id === item.id),
+            [allItems, item.id],
+        );
 
         return (
             <div>
@@ -220,8 +227,8 @@ const ShowShipmentDetail = ({ shipment }: ShipmentDetailProps) => {
     return (
         <Authenticated
             header={
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                <div className="w-full space-y-4">
+                    <div className="flex w-full items-center justify-between">
                         <div className="space-y-2">
                             <h1 className="text-2xl font-bold capitalize tracking-tight">
                                 {shipment.title}
@@ -233,6 +240,18 @@ const ShowShipmentDetail = ({ shipment }: ShipmentDetailProps) => {
                                 </span>
                             </div>
                         </div>
+                        <PDFDownloadLink
+                            document={<ShipmentPDF shipment={shipment} />}
+                            fileName={`shipment-${shipment.id}.pdf`}
+                        >
+                            {({ loading }) => (
+                                <Button disabled={loading}>
+                                    {loading
+                                        ? 'Generating PDF...'
+                                        : 'Download PDF'}
+                                </Button>
+                            )}
+                        </PDFDownloadLink>
                     </div>
                 </div>
             }
