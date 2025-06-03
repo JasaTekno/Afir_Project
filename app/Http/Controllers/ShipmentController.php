@@ -35,13 +35,15 @@ class ShipmentController extends Controller
             }
         }
 
-        $shipments = $query->with(['clientCostTotal', 'companyCostTotal'])->get();
+        $shipments = $query
+            ->with(['clientCostTotal', 'companyCostTotal'])
+            ->orderByDesc('created_at')
+            ->get();
 
         return Inertia::render('Home', [
             'shipments' => $shipments,
         ]);
     }
-
 
     public function add()
     {
@@ -52,13 +54,18 @@ class ShipmentController extends Controller
     {
         return Inertia::render('Shipment/ShowShipmentDetail', [
             'shipment' => $shipment->load([
-                'costItems',
+                'costItems' => function ($query) {
+                    $query->orderBy('name');
+                },
+                'costItems.children' => function ($query) {
+                    $query->orderBy('name');
+                },
                 'clientCostTotal',
                 'companyCostTotal',
-                'costItems.children'
             ])
         ]);
     }
+
 
     public function store(Request $request)
     {
@@ -86,30 +93,68 @@ class ShipmentController extends Controller
             $costs = collect($validated['costs']);
             $costsById = $costs->keyBy('id')->toArray();
 
-            function calculateAmount(string $id, array &$costsById): float
+            function calculateAmount(string $id, array &$costsById, array &$calculated = []): float
             {
-                $cost = $costsById[$id];
-
-                if (($cost['calculationType'] ?? 'manual') === 'manual') {
-                    return floatval($cost['amount']);
+                // Avoid recalculation if already calculated
+                if (isset($calculated[$id])) {
+                    return $calculated[$id];
                 }
 
+                $cost = $costsById[$id];
                 $children = array_filter($costsById, fn($c) => ($c['parentId'] ?? null) === $id);
 
-                $product = 1;
-                foreach ($children as $child) {
-                    $product *= calculateAmount($child['id'], $costsById);
+                // Manual calculation type - use the provided amount only if no children
+                if (($cost['calculationType'] ?? null) === 'manual') {
+                    // If has children, ignore manual amount and sum children instead
+                    if (count($children) > 0) {
+                        $sum = 0;
+                        foreach ($children as $child) {
+                            $sum += calculateAmount($child['id'], $costsById, $calculated);
+                        }
+                        $costsById[$id]['amount'] = $sum;
+                        $calculated[$id] = $sum;
+                        return $sum;
+                    }
+
+                    // No children, use manual amount
+                    $calculated[$id] = floatval($cost['amount']);
+                    return $calculated[$id];
                 }
 
-                $costsById[$id]['amount'] = $product;
+                // Multiply children calculation type
+                if (($cost['calculationType'] ?? null) === 'multiply_children' && count($children)) {
+                    $product = 1;
+                    foreach ($children as $child) {
+                        $product *= calculateAmount($child['id'], $costsById, $calculated);
+                    }
+                    $costsById[$id]['amount'] = $product;
+                    $calculated[$id] = $product;
+                    return $product;
+                }
 
-                return $product;
+                // Default: sum children if they exist
+                if (count($children)) {
+                    $sum = 0;
+                    foreach ($children as $child) {
+                        $sum += calculateAmount($child['id'], $costsById, $calculated);
+                    }
+                    $costsById[$id]['amount'] = $sum;
+                    $calculated[$id] = $sum;
+                    return $sum;
+                }
+
+                // No children, use original amount
+                $calculated[$id] = floatval($cost['amount']);
+                return $calculated[$id];
             }
 
-            foreach ($costsById as $id => $cost) {
-                if (($cost['calculationType'] ?? 'manual') === 'multiply_children') {
-                    calculateAmount($id, $costsById);
-                }
+            // Calculate amounts for all costs (optimized to only calculate root costs)
+            $calculated = [];
+            $rootCosts = collect($costsById)->filter(fn($c) => empty($c['parentId']));
+
+            // Only calculate for root costs, children will be calculated recursively
+            foreach ($rootCosts as $rootCost) {
+                calculateAmount($rootCost['id'], $costsById, $calculated);
             }
 
             $insertCostItem = function ($costId, $parentId = null) use (&$insertCostItem, $shipment, $costsById) {
@@ -131,8 +176,6 @@ class ShipmentController extends Controller
                 }
             };
 
-            $rootCosts = collect($costsById)->filter(fn($c) => empty($c['parentId']));
-
             foreach ($rootCosts as $rootCost) {
                 $insertCostItem($rootCost['id'], null);
             }
@@ -142,6 +185,7 @@ class ShipmentController extends Controller
                 'company' => ['fixed' => 0, 'variable' => 0],
             ];
 
+            // Only count root level costs (costs without parentId)
             foreach ($costsById as $cost) {
                 if (empty($cost['parentId'])) {
                     $totals[$cost['side']][$cost['type']] += floatval($cost['amount']);

@@ -244,6 +244,8 @@ const ShipmentCostForm = () => {
 
         data.costs = allCosts;
 
+        console.log(data.costs);
+
         post(route('shipments.costs.store'), {
             onSuccess: () => console.log('Berhasil disimpan!'),
             onError: (e) => console.log(e),

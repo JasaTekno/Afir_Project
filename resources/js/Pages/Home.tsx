@@ -133,7 +133,7 @@ export default function Home({ shipments }: Props) {
                     <Button onClick={applyFilter}>Terapkan Filter</Button>
 
                     <Link href={route('shipment.add')}>
-                        <Button variant="secondary">+ Tambah Shipment</Button>
+                        <Button variant="outline">+ Tambah Shipment</Button>
                     </Link>
                 </div>
             }
