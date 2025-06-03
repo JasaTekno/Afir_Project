@@ -110,15 +110,42 @@ const ShowShipmentDetail = ({ shipment }: ShipmentDetailProps) => {
                 {/* Cost Items */}
                 <div className="space-y-2">
                     {costs.length > 0 ? (
-                        <div className="space-y-2">
-                            {costs.map((cost) => (
-                                <CostItemNode
-                                    key={cost.id}
-                                    item={cost}
-                                    allItems={shipment.cost_items}
-                                    level={0}
-                                />
-                            ))}
+                        <div className="space-y-4">
+                            {/* Fixed Costs */}
+                            <div className="space-y-1">
+                                <p className="text-xs font-semibold uppercase text-muted-foreground">
+                                    Fixed Costs
+                                </p>
+                                {costs
+                                    .filter((c) => c.type === 'fixed')
+                                    .map((cost) => (
+                                        <CostItemNode
+                                            key={cost.id}
+                                            item={cost}
+                                            allItems={shipment.cost_items}
+                                            level={0}
+                                        />
+                                    ))}
+                            </div>
+
+                            <Separator />
+
+                            {/* Variable Costs */}
+                            <div className="space-y-1">
+                                <p className="text-xs font-semibold uppercase text-muted-foreground">
+                                    Variable Costs
+                                </p>
+                                {costs
+                                    .filter((c) => c.type === 'variable')
+                                    .map((cost) => (
+                                        <CostItemNode
+                                            key={cost.id}
+                                            item={cost}
+                                            allItems={shipment.cost_items}
+                                            level={0}
+                                        />
+                                    ))}
+                            </div>
                         </div>
                     ) : (
                         <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
@@ -256,7 +283,7 @@ const ShowShipmentDetail = ({ shipment }: ShipmentDetailProps) => {
                 </div>
             }
         >
-            <div className="mx-auto my-8 max-w-[1440px] space-y-8">
+            <div className="mx-auto my-8 max-w-[1440px] space-y-8 px-4">
                 {/* Metrics Overview */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                     <MetricCard

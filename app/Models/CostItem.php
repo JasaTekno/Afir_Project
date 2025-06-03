@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -14,6 +15,7 @@ class CostItem extends Model
         'side',
         'calculation_type',
         'name',
+        'type',
         'amount',
     ];
 

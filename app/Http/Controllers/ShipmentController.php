@@ -95,7 +95,6 @@ class ShipmentController extends Controller
 
             function calculateAmount(string $id, array &$costsById, array &$calculated = []): float
             {
-                // Avoid recalculation if already calculated
                 if (isset($calculated[$id])) {
                     return $calculated[$id];
                 }
@@ -103,9 +102,7 @@ class ShipmentController extends Controller
                 $cost = $costsById[$id];
                 $children = array_filter($costsById, fn($c) => ($c['parentId'] ?? null) === $id);
 
-                // Manual calculation type - use the provided amount only if no children
                 if (($cost['calculationType'] ?? null) === 'manual') {
-                    // If has children, ignore manual amount and sum children instead
                     if (count($children) > 0) {
                         $sum = 0;
                         foreach ($children as $child) {
@@ -116,12 +113,10 @@ class ShipmentController extends Controller
                         return $sum;
                     }
 
-                    // No children, use manual amount
                     $calculated[$id] = floatval($cost['amount']);
                     return $calculated[$id];
                 }
 
-                // Multiply children calculation type
                 if (($cost['calculationType'] ?? null) === 'multiply_children' && count($children)) {
                     $product = 1;
                     foreach ($children as $child) {
@@ -132,7 +127,6 @@ class ShipmentController extends Controller
                     return $product;
                 }
 
-                // Default: sum children if they exist
                 if (count($children)) {
                     $sum = 0;
                     foreach ($children as $child) {
@@ -143,16 +137,13 @@ class ShipmentController extends Controller
                     return $sum;
                 }
 
-                // No children, use original amount
                 $calculated[$id] = floatval($cost['amount']);
                 return $calculated[$id];
             }
 
-            // Calculate amounts for all costs (optimized to only calculate root costs)
             $calculated = [];
             $rootCosts = collect($costsById)->filter(fn($c) => empty($c['parentId']));
 
-            // Only calculate for root costs, children will be calculated recursively
             foreach ($rootCosts as $rootCost) {
                 calculateAmount($rootCost['id'], $costsById, $calculated);
             }
@@ -165,6 +156,7 @@ class ShipmentController extends Controller
                     'name' => $cost['name'],
                     'amount' => $cost['amount'],
                     'side' => $cost['side'],
+                    'type' => $cost['type'],
                     'parent_id' => $parentId,
                     'calculation_type' => $cost['calculationType'] ?? 'manual',
                 ]);
@@ -185,7 +177,6 @@ class ShipmentController extends Controller
                 'company' => ['fixed' => 0, 'variable' => 0],
             ];
 
-            // Only count root level costs (costs without parentId)
             foreach ($costsById as $cost) {
                 if (empty($cost['parentId'])) {
                     $totals[$cost['side']][$cost['type']] += floatval($cost['amount']);

@@ -244,8 +244,6 @@ const ShipmentCostForm = () => {
 
         data.costs = allCosts;
 
-        console.log(data.costs);
-
         post(route('shipments.costs.store'), {
             onSuccess: () => console.log('Berhasil disimpan!'),
             onError: (e) => console.log(e),
@@ -253,7 +251,7 @@ const ShipmentCostForm = () => {
     };
 
     return (
-        <div className="mx-auto mt-4 max-w-[1440px] py-8">
+        <div className="mx-auto mt-4 max-w-[1440px] px-4 py-8">
             <form onSubmit={handleSubmit} className="w-full">
                 <Card className="mb-8 border-0 bg-white shadow-sm">
                     <CardHeader className="pb-4">

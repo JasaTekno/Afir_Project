@@ -64,6 +64,7 @@ type CostItemDetail = {
     id: string;
     name: string;
     amount: string;
+    type: string;
     side: 'client' | 'company';
     calculation_type: 'manual' | 'multiply_children';
     parent_id: string | null;

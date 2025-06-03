@@ -32,10 +32,18 @@ interface Props {
 export default function Home({ shipments }: Props) {
     const [filterType, setFilterType] = useState('all');
     const [filterValue, setFilterValue] = useState('');
+    const [rangeFrom, setRangeFrom] = useState('');
+    const [rangeTo, setRangeTo] = useState('');
 
     const applyFilter = () => {
         const query: Record<string, string> = {};
-        if (filterType !== 'all' && filterValue) {
+
+        if (filterType === 'range') {
+            if (rangeFrom && rangeTo) {
+                query.filterType = 'range';
+                query.filterValue = `${rangeFrom}|${rangeTo}`;
+            }
+        } else if (filterType !== 'all' && filterValue) {
             query.filterType = filterType;
             query.filterValue = filterValue;
         }
@@ -49,88 +57,78 @@ export default function Home({ shipments }: Props) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-wrap items-center gap-3">
-                    <Select
-                        value={filterType}
-                        onValueChange={(val) => {
-                            setFilterType(val);
-                            setFilterValue('');
-                        }}
-                    >
-                        <SelectTrigger className="w-[160px]">
-                            <SelectValue placeholder="Filter Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Semua</SelectItem>
-                            <SelectItem value="daily">Harian</SelectItem>
-                            <SelectItem value="range">
-                                Rentang Tanggal
-                            </SelectItem>
-                            <SelectItem value="monthly">Bulanan</SelectItem>
-                            <SelectItem value="yearly">Tahunan</SelectItem>
-                        </SelectContent>
-                    </Select>
+                <div className="flex w-full flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-4">
+                        <Select
+                            value={filterType}
+                            onValueChange={(val) => {
+                                setFilterType(val);
+                                setFilterValue('');
+                            }}
+                        >
+                            <SelectTrigger className="w-[160px]">
+                                <SelectValue placeholder="Filter Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Semua</SelectItem>
+                                <SelectItem value="daily">Harian</SelectItem>
+                                <SelectItem value="range">
+                                    Rentang Tanggal
+                                </SelectItem>
+                                <SelectItem value="monthly">Bulanan</SelectItem>
+                                <SelectItem value="yearly">Tahunan</SelectItem>
+                            </SelectContent>
+                        </Select>
 
-                    {filterType === 'daily' && (
-                        <Input
-                            type="date"
-                            value={filterValue}
-                            onChange={(e) => setFilterValue(e.target.value)}
-                            className="w-fit"
-                        />
-                    )}
-
-                    {filterType === 'range' && (
-                        <div className="flex gap-2">
+                        {filterType === 'daily' && (
                             <Input
                                 type="date"
-                                onChange={(e) => {
-                                    const from = e.target.value;
-                                    setFilterValue((prev) =>
-                                        from && prev
-                                            ? `${from}|${prev.split('|')[1] || ''}`
-                                            : '',
-                                    );
-                                }}
-                                placeholder="Dari"
+                                value={filterValue}
+                                onChange={(e) => setFilterValue(e.target.value)}
                                 className="w-fit"
                             />
+                        )}
+
+                        {filterType === 'range' && (
+                            <div className="flex gap-2">
+                                <Input
+                                    type="date"
+                                    onChange={(e) =>
+                                        setRangeFrom(e.target.value)
+                                    }
+                                    placeholder="Dari"
+                                    className="w-fit"
+                                />
+                                <Input
+                                    type="date"
+                                    onChange={(e) => setRangeTo(e.target.value)}
+                                    placeholder="Sampai"
+                                    className="w-fit"
+                                />
+                            </div>
+                        )}
+
+                        {filterType === 'monthly' && (
                             <Input
-                                type="date"
-                                onChange={(e) => {
-                                    const to = e.target.value;
-                                    setFilterValue((prev) =>
-                                        to && prev
-                                            ? `${prev.split('|')[0] || ''}|${to}`
-                                            : '',
-                                    );
-                                }}
-                                placeholder="Sampai"
+                                type="month"
+                                value={filterValue}
+                                onChange={(e) => setFilterValue(e.target.value)}
                                 className="w-fit"
                             />
-                        </div>
-                    )}
+                        )}
 
-                    {filterType === 'monthly' && (
-                        <Input
-                            type="month"
-                            value={filterValue}
-                            onChange={(e) => setFilterValue(e.target.value)}
-                            className="w-fit"
-                        />
-                    )}
+                        {filterType === 'yearly' && (
+                            <Input
+                                type="number"
+                                placeholder="Tahun"
+                                value={filterValue}
+                                onChange={(e) => setFilterValue(e.target.value)}
+                                className="w-[100px]"
+                            />
+                        )}
 
-                    {filterType === 'yearly' && (
-                        <Input
-                            type="number"
-                            placeholder="Tahun"
-                            value={filterValue}
-                            onChange={(e) => setFilterValue(e.target.value)}
-                            className="w-[100px]"
-                        />
-                    )}
-
-                    <Button onClick={applyFilter}>Terapkan Filter</Button>
+                        <Button onClick={applyFilter}>Terapkan Filter</Button>
+                    </div>
 
                     <Link href={route('shipment.add')}>
                         <Button variant="outline">+ Tambah Shipment</Button>
