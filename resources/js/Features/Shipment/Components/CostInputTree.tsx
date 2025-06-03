@@ -118,11 +118,6 @@ export function CostInputTree({
                             >
                                 Hapus
                             </Button>
-                            {/* {showReadOnlyIndicator && item.mirroredFromId && (
-                                <span className="rounded bg-blue-50 px-2 py-1 text-xs text-blue-500">
-                                    Mirror dari Client
-                                </span>
-                            )} */}
                         </div>
                     </div>
                     {item.children.length > 0 && (

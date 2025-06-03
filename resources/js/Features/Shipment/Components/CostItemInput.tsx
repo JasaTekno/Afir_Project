@@ -1,4 +1,3 @@
-// Define DualCostItem interface locally since it might not be exported
 interface DualCostItem {
     id: number;
     name: string;
@@ -14,8 +13,8 @@ interface CostItemInputProps {
     onChange: (id: number, updatedItem: DualCostItem) => void;
     onAddSubCost: (id: number) => void;
     onDelete: (id: number) => void;
-    readOnlyName?: boolean; // New prop for mirrored items
-    readOnlyAmount?: boolean; // New prop for mirrored amounts
+    readOnlyName?: boolean;
+    readOnlyAmount?: boolean;
     level?: number;
 }
 
@@ -29,7 +28,7 @@ const CostItemInput = ({
     level = 0,
 }: CostItemInputProps) => {
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (readOnlyName) return; // Prevent changes if readonly
+        if (readOnlyName) return;
 
         onChange(item.id, {
             ...item,
@@ -38,7 +37,7 @@ const CostItemInput = ({
     };
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (readOnlyAmount) return; // Prevent changes if readonly
+        if (readOnlyAmount) return;
 
         onChange(item.id, {
             ...item,

@@ -12,6 +12,7 @@ import { ShipmentPDF } from '@/Features/Shipment/Components/pdf/ShipmentPdf';
 import Authenticated from '@/Layouts/AuthenticatedLayout';
 import { formatted } from '@/lib/utils';
 import { ShipmentDetailProps } from '@/types';
+import { Head } from '@inertiajs/react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import {
     Building2,
@@ -107,7 +108,6 @@ const ShowShipmentDetail = ({ shipment }: ShipmentDetailProps) => {
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                {/* Cost Items */}
                 <div className="space-y-2">
                     {costs.length > 0 ? (
                         <div className="space-y-4">
@@ -157,7 +157,6 @@ const ShowShipmentDetail = ({ shipment }: ShipmentDetailProps) => {
 
                 <Separator />
 
-                {/* Totals */}
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">
@@ -283,8 +282,9 @@ const ShowShipmentDetail = ({ shipment }: ShipmentDetailProps) => {
                 </div>
             }
         >
+            <Head title="Detail" />
+
             <div className="mx-auto my-8 max-w-[1440px] space-y-8 px-4">
-                {/* Metrics Overview */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                     <MetricCard
                         title="Profit"
@@ -313,7 +313,6 @@ const ShowShipmentDetail = ({ shipment }: ShipmentDetailProps) => {
                     />
                 </div>
 
-                {/* Cost Breakdown */}
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                     <CostItemsCard
                         title="Client Cost"
@@ -331,7 +330,6 @@ const ShowShipmentDetail = ({ shipment }: ShipmentDetailProps) => {
                     />
                 </div>
 
-                {/* Information Card */}
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-lg">
