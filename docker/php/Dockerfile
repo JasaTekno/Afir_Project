@@ -28,7 +28,7 @@ COPY . .
 
 COPY --from=node-builder /app/public/build ./public/build
 
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --optimize-autoloader
 
 RUN if [ ! -f .env ]; then cp .env.example .env; fi
 RUN php artisan key:generate
