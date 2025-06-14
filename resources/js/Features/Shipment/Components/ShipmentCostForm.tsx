@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { formatted } from '@/lib/utils';
 import { FlatCostItem } from '@/types';
 import { useForm } from '@inertiajs/react';
-import { Building2, Calendar, Plus, Ship, User } from 'lucide-react';
+import { Calendar, Plus, Ship, User } from 'lucide-react';
 import { FormEvent, memo, useState } from 'react';
 import {
     countCostItems,
@@ -32,18 +32,11 @@ const ShipmentCostForm = () => {
         setFixedCosts,
         setVariableCosts,
         handleClientAddSubCost,
-        handleCompanyAddSubCost,
         addVariableCostRoot,
     } = useShipmentCostForm();
 
-    const {
-        fixedClientCost,
-        fixedCompanyCost,
-        variableClientCost,
-        variableCompanyCost,
-        totalClientCost,
-        totalCompanyCost,
-    } = useCostTotals(fixedCosts, variableCosts);
+    const { fixedClientCost, variableClientCost, totalClientCost } =
+        useCostTotals(fixedCosts, variableCosts);
 
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(
         new Date(),
@@ -75,27 +68,6 @@ const ShipmentCostForm = () => {
             };
         });
 
-    const updateMirroredItem = (
-        list: DualCostItem[],
-        mirroredFromId: string,
-        field: 'name' | 'amount' | 'calculationType',
-        value: string,
-    ): DualCostItem[] =>
-        list.map((item) => {
-            if (item.mirroredFromId === mirroredFromId) {
-                return { ...item, [field]: value };
-            }
-            return {
-                ...item,
-                children: updateMirroredItem(
-                    item.children,
-                    mirroredFromId,
-                    field,
-                    value,
-                ),
-            };
-        });
-
     const deleteCostItemRecursively = (
         list: DualCostItem[],
         id: string,
@@ -108,18 +80,6 @@ const ShipmentCostForm = () => {
             }));
     };
 
-    const deleteMirroredItem = (
-        list: DualCostItem[],
-        mirroredFromId: string,
-    ): DualCostItem[] => {
-        return list
-            .filter((item) => item.mirroredFromId !== mirroredFromId)
-            .map((item) => ({
-                ...item,
-                children: deleteMirroredItem(item.children, mirroredFromId),
-            }));
-    };
-
     const onClientFixedChange = (
         id: string,
         field: 'name' | 'amount' | 'calculationType',
@@ -127,14 +87,8 @@ const ShipmentCostForm = () => {
     ) => {
         setFixedCosts((prev) => {
             const newClient = updateCostItem(prev.client, id, field, value);
-            const newCompany = updateMirroredItem(
-                prev.company,
-                id,
-                field,
-                value,
-            );
 
-            return { client: newClient, company: newCompany };
+            return { client: newClient };
         });
     };
 
@@ -145,69 +99,24 @@ const ShipmentCostForm = () => {
     ) => {
         setVariableCosts((prev) => {
             const newClient = updateCostItem(prev.client, id, field, value);
-            const newCompany = updateMirroredItem(
-                prev.company,
-                id,
-                field,
-                value,
-            );
-
-            return { client: newClient, company: newCompany };
+            return { client: newClient };
         });
-    };
-
-    const onCompanyFixedChange = (
-        id: string,
-        field: 'name' | 'amount' | 'calculationType',
-        value: string,
-    ) => {
-        setFixedCosts((prev) => ({
-            ...prev,
-            company: updateCostItem(prev.company, id, field, value),
-        }));
-    };
-
-    const onCompanyVariableChange = (
-        id: string,
-        field: 'name' | 'amount' | 'calculationType',
-        value: string,
-    ) => {
-        setVariableCosts((prev) => ({
-            ...prev,
-            company: updateCostItem(prev.company, id, field, value),
-        }));
     };
 
     const onDeleteClientFixed = (id: string) => {
         setFixedCosts((prev) => {
             const newClient = deleteCostItemRecursively(prev.client, id);
-            const newCompany = deleteMirroredItem(prev.company, id);
 
-            return { client: newClient, company: newCompany };
+            return { client: newClient };
         });
     };
 
     const onDeleteClientVariable = (id: string) => {
         setVariableCosts((prev) => {
             const newClient = deleteCostItemRecursively(prev.client, id);
-            const newCompany = deleteMirroredItem(prev.company, id);
 
-            return { client: newClient, company: newCompany };
+            return { client: newClient };
         });
-    };
-
-    const onDeleteCompanyFixed = (id: string) => {
-        setFixedCosts((prev) => ({
-            ...prev,
-            company: deleteCostItemRecursively(prev.company, id),
-        }));
-    };
-
-    const onDeleteCompanyVariable = (id: string) => {
-        setVariableCosts((prev) => ({
-            ...prev,
-            company: deleteCostItemRecursively(prev.company, id),
-        }));
     };
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -218,36 +127,23 @@ const ShipmentCostForm = () => {
             'client',
             'fixed',
         );
-        const flatFixedCompany = flattenCostTree(
-            fixedCosts.company,
-            'company',
-            'fixed',
-        );
 
         const flatVariableClient = flattenCostTree(
             variableCosts.client,
             'client',
             'variable',
         );
-        const flatVariableCompany = flattenCostTree(
-            variableCosts.company,
-            'company',
-            'variable',
-        );
 
-        const allCosts = [
-            ...flatFixedClient,
-            ...flatFixedCompany,
-            ...flatVariableClient,
-            ...flatVariableCompany,
-        ];
+        const allCosts = [...flatFixedClient, ...flatVariableClient];
 
         data.costs = allCosts;
 
-        post(route('shipments.costs.store'), {
-            onSuccess: () => console.log('Berhasil disimpan!'),
-            onError: (e) => console.log(e),
-        });
+        console.log(data);
+
+        // post(route('shipments.costs.store'), {
+        //     onSuccess: () => console.log('Berhasil disimpan!'),
+        //     onError: (e) => console.log(e),
+        // });
     };
 
     return (
@@ -315,7 +211,7 @@ const ShipmentCostForm = () => {
                     </CardContent>
                 </Card>
 
-                <div className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+                <div className="mb-8">
                     {/* Client Report */}
                     <Card className="border-0 bg-white shadow-sm">
                         <CardHeader className="pb-4">
@@ -405,107 +301,12 @@ const ShipmentCostForm = () => {
                             </div>
                         </CardContent>
                     </Card>
-
-                    {/* Company Report */}
-                    <Card className="border-0 bg-white shadow-sm">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="flex items-center gap-2 text-gray-900">
-                                <Building2 className="h-5 w-5 text-blue-600" />
-                                COMPANY REPORT
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="space-y-3">
-                                <div className="mb-4 flex items-center justify-between">
-                                    <h3 className="font-semibold text-gray-800">
-                                        Fixed Cost
-                                    </h3>
-                                    <Badge
-                                        variant="outline"
-                                        className="border-blue-200 bg-blue-50 text-blue-700"
-                                    >
-                                        {countCostItems(fixedCosts.company)}{' '}
-                                        Items
-                                    </Badge>
-                                </div>
-                                <div className="space-y-3">
-                                    <MemoizedCostInputTree
-                                        items={fixedCosts.company}
-                                        onChange={onCompanyFixedChange}
-                                        onAddSubCost={(parentId) =>
-                                            handleCompanyAddSubCost(
-                                                parentId,
-                                                'fixed',
-                                            )
-                                        }
-                                        onDelete={onDeleteCompanyFixed}
-                                        showReadOnlyIndicator={true}
-                                    />
-                                </div>
-                                <h3 className="text-right text-sm text-blue-700">
-                                    Total Fixed Cost:{' '}
-                                    {formatted(fixedCompanyCost)}
-                                </h3>
-                            </div>
-
-                            <Separator />
-
-                            <div className="space-y-4">
-                                <div className="mb-4 flex items-center justify-between">
-                                    <h3 className="font-semibold text-gray-800">
-                                        Variable Cost
-                                    </h3>
-                                    <Badge
-                                        variant="outline"
-                                        className="border-blue-200 bg-blue-50 text-blue-700"
-                                    >
-                                        {countCostItems(variableCosts.company)}{' '}
-                                        Items
-                                    </Badge>
-                                </div>
-                                <div className="space-y-3">
-                                    <MemoizedCostInputTree
-                                        items={variableCosts.company}
-                                        onChange={onCompanyVariableChange}
-                                        onAddSubCost={(parentId) =>
-                                            handleCompanyAddSubCost(
-                                                parentId,
-                                                'variable',
-                                            )
-                                        }
-                                        onDelete={onDeleteCompanyVariable}
-                                        showReadOnlyIndicator={true}
-                                    />
-                                </div>
-                                <h3 className="text-right text-sm text-blue-700">
-                                    Total Variable Cost:{' '}
-                                    {formatted(variableCompanyCost)}
-                                </h3>
-                                <Button
-                                    variant="outline"
-                                    className="w-full border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50"
-                                    type="button"
-                                    onClick={() =>
-                                        addVariableCostRoot('company')
-                                    }
-                                >
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Variable Cost (Company Only)
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
                 </div>
 
                 <div className="flex flex-col gap-4">
-                    <div className="space-y-1">
-                        <h3 className="text-right text-sm text-green-700">
-                            Total Cost Client: {formatted(totalClientCost)}
-                        </h3>
-                        <h3 className="text-right text-sm text-blue-700">
-                            Total Cost Company: {formatted(totalCompanyCost)}
-                        </h3>
-                    </div>
+                    <h3 className="text-right text-sm text-green-700">
+                        Total Cost: {formatted(totalClientCost)}
+                    </h3>
 
                     <PrimaryButton
                         disabled={processing}

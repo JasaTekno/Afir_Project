@@ -7,8 +7,6 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class CostItem extends Model
 {
-    use HasUuids;
-
     protected $fillable = [
         'shipment_id',
         'parent_id',
