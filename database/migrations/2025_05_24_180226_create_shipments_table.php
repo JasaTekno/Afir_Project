@@ -34,9 +34,9 @@ return new class extends Migration
         });
 
         Schema::create('cost_items', function (Blueprint $table) {
-            $table->id();
+            $table->uuid("id")->primary();
             $table->foreignUuid('shipment_id')->constrained()->cascadeOnDelete();
-            $table->unsignedBigInteger('parent_id')->nullable();
+            $table->uuid('parent_id')->nullable();
 
             $table->enum('side', ['client', 'company']);
             $table->enum('type', ['fixed', 'variable']);
@@ -61,7 +61,7 @@ return new class extends Migration
 
         Schema::create('cost_item_audit_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('cost_item_id')->constrained('cost_items', 'id')->cascadeOnDelete();
+            $table->foreignUuid('cost_item_id')->constrained('cost_items', 'id')->cascadeOnDelete();
             $table->string('action');
             $table->json('old_values')->nullable();
             $table->json('new_values')->nullable();

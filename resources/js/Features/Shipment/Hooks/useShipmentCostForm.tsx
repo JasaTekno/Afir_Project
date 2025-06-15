@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 export type CostItemBase = {
@@ -7,15 +7,17 @@ export type CostItemBase = {
     amount: string;
     parentId: string | null;
     children: CostItemBase[];
-    calculationType: 'manual' | 'multiply_children';
-    costType: 'fixed' | 'variable';
+    calculation_type: 'manual' | 'multiply_children';
+    type: 'fixed' | 'variable';
 };
 
-export const countCostItems = (items: CostItemBase[]): number => {
-    return items.reduce(
-        (acc, item) => acc + 1 + countCostItems(item.children),
-        0,
-    );
+export const countCostItems = (items?: CostItemBase[]): number => {
+    if (!Array.isArray(items)) return 0;
+
+    return items.reduce((total, item) => {
+        const childrenCount = countCostItems(item.children ?? []);
+        return total + 1 + childrenCount;
+    }, 0);
 };
 
 export const flattenCostTree = (
@@ -32,22 +34,45 @@ export const flattenCostTree = (
     });
 };
 
+const initialFixedCosts = [
+    { name: 'Gaji Crew' },
+    { name: 'Uang Makan Crew' },
+    { name: 'Operasional' },
+    { name: 'Koordinasi Keamanan' },
+];
+
 export const useShipmentCostForm = () => {
     const [fixedCosts, setFixedCosts] = useState<CostItemBase[]>([]);
     const [variableCosts, setVariableCosts] = useState<CostItemBase[]>([]);
 
-    const addRootCostItem = (costType: 'fixed' | 'variable') => {
+    useEffect(() => {
+        const initializedFixedCosts: CostItemBase[] = initialFixedCosts.map(
+            (item) => ({
+                id: uuidv4(),
+                name: item.name,
+                amount: '',
+                parentId: null,
+                children: [],
+                calculation_type: 'manual',
+                type: 'fixed',
+            }),
+        );
+
+        setFixedCosts(initializedFixedCosts);
+    }, []);
+
+    const addRootCostItem = (type: 'fixed' | 'variable') => {
         const newItem: CostItemBase = {
             id: uuidv4(),
             name: '',
             amount: '',
             parentId: null,
             children: [],
-            calculationType: 'manual',
-            costType,
+            calculation_type: 'manual',
+            type,
         };
 
-        if (costType === 'fixed') {
+        if (type === 'fixed') {
             setFixedCosts((prev) => [...prev, newItem]);
         } else {
             setVariableCosts((prev) => [...prev, newItem]);
@@ -72,21 +97,18 @@ export const useShipmentCostForm = () => {
             };
         });
 
-    const handleAddSubCost = (
-        costType: 'fixed' | 'variable',
-        parentId: string,
-    ) => {
+    const handleAddSubCost = (type: 'fixed' | 'variable', parentId: string) => {
         const newItem: CostItemBase = {
             id: uuidv4(),
             name: '',
             amount: '',
             parentId,
             children: [],
-            calculationType: 'manual',
-            costType,
+            calculation_type: 'manual',
+            type,
         };
 
-        if (costType === 'fixed') {
+        if (type === 'fixed') {
             setFixedCosts((prev) =>
                 addSubCostToParent(prev, parentId, newItem),
             );

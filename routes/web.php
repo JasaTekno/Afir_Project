@@ -20,6 +20,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/shipments/{shipment}', [ShipmentController::class, 'show'])->name('shipments.show');
     Route::get('/add-shipment', [ShipmentController::class, 'add'])->name('shipment.add');
     Route::post('/shipments/costs', [ShipmentController::class, 'store'])->name('shipments.costs.store');
+    Route::get('/shipments/{shipment}/edit-cost', [ShipmentController::class, 'editCost'])->name('shipments.editCost');
+    Route::put('/shipments/{shipment}/update-cost', [ShipmentController::class, 'updateCost'])->name('shipments.updateCost');
 });
 
 require __DIR__ . '/auth.php';

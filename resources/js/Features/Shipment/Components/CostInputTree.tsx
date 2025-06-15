@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DualCostItem } from '../Hooks/useShipmentCostForm';
+import { CostItemBase } from '../Hooks/useShipmentCostForm';
 
 import {
     Select,
@@ -11,15 +11,14 @@ import {
 } from '@/components/ui/select';
 
 type Props = {
-    items: DualCostItem[];
+    items: CostItemBase[];
     onChange: (
         id: string,
-        field: 'name' | 'amount' | 'calculationType',
+        field: 'name' | 'amount' | 'calculation_type',
         value: string,
     ) => void;
     onAddSubCost: (parentId: string) => void;
     onDelete: (id: string) => void;
-    showReadOnlyIndicator?: boolean;
 };
 
 export function CostInputTree({
@@ -27,110 +26,86 @@ export function CostInputTree({
     onChange,
     onAddSubCost,
     onDelete,
-    showReadOnlyIndicator = false,
 }: Props) {
-    return (
-        <div className="space-y-2">
-            {items.map((item) => (
-                <div key={item.id} className="ml-4 space-y-2 border-l pl-4">
-                    <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                            <div className="relative w-full">
-                                <Input
-                                    placeholder="Nama biaya"
-                                    value={item.name}
-                                    onChange={(e) =>
-                                        onChange(
-                                            item.id,
-                                            'name',
-                                            e.target.value,
-                                        )
-                                    }
-                                    readOnly={
-                                        !!(
-                                            showReadOnlyIndicator &&
-                                            item.mirroredFromId
-                                        )
-                                    }
-                                    className={`${
-                                        showReadOnlyIndicator &&
-                                        item.mirroredFromId
-                                            ? 'bg-gray-100 text-gray-600'
-                                            : ''
-                                    }`}
-                                />
-                                {showReadOnlyIndicator &&
-                                    item.mirroredFromId && (
-                                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-                                            🔒
-                                        </span>
-                                    )}
-                            </div>
-                            <Input
-                                placeholder="-"
-                                value={item.amount}
-                                onChange={(e) =>
-                                    onChange(item.id, 'amount', e.target.value)
-                                }
-                                type="number"
-                                className="w-1/2"
-                            />
-                        </div>
+    const renderTree = (items: CostItemBase[], level = 0) => {
+        return items.map((item) => (
+            <div key={item.id} className="ml-4 space-y-2 border-l pl-4">
+                <div className="flex items-center justify-between gap-2">
+                    <div className="flex w-full items-center gap-2">
+                        <span className="w-[80px] whitespace-nowrap text-xs text-muted-foreground">
+                            {Array(level).fill('—').join('')} Biaya
+                        </span>
 
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                type="button"
-                                onClick={() => onAddSubCost(item.id)}
-                            >
-                                + Sub
-                            </Button>
-                            {item.costType === 'variable' && (
-                                <Select
-                                    value={item.calculationType}
-                                    onValueChange={(value) =>
-                                        onChange(
-                                            item.id,
-                                            'calculationType',
-                                            value,
-                                        )
-                                    }
-                                >
-                                    <SelectTrigger className="w-[100px]">
-                                        <SelectValue placeholder="Tipe Perhitungan" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="manual">
-                                            Manual
-                                        </SelectItem>
-                                        <SelectItem value="multiply_children">
-                                            Kali Sub-Cost
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            )}
-                            <Button
-                                variant="destructive"
-                                size="sm"
-                                type="button"
-                                onClick={() => onDelete(item.id)}
-                            >
-                                Hapus
-                            </Button>
-                        </div>
-                    </div>
-                    {item.children.length > 0 && (
-                        <CostInputTree
-                            items={item.children}
-                            onChange={onChange}
-                            onAddSubCost={onAddSubCost}
-                            onDelete={onDelete}
-                            showReadOnlyIndicator={showReadOnlyIndicator}
+                        <Input
+                            placeholder="Nama biaya"
+                            value={item.name}
+                            onChange={(e) =>
+                                onChange(item.id, 'name', e.target.value)
+                            }
+                            className="w-[240px]"
                         />
-                    )}
+
+                        <Input
+                            placeholder="Jumlah"
+                            value={item.amount}
+                            onChange={(e) =>
+                                onChange(item.id, 'amount', e.target.value)
+                            }
+                            type="number"
+                            className="w-[160px]"
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            type="button"
+                            onClick={() => onAddSubCost(item.id)}
+                            className="w-[160px] px-3 text-right"
+                        >
+                            <span className="inline-block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-right">
+                                + Sub dari {item.name || 'item ini'}...
+                            </span>
+                        </Button>
+
+                        {item.type === 'variable' && (
+                            <Select
+                                value={item.calculation_type}
+                                onValueChange={(value) =>
+                                    onChange(item.id, 'calculation_type', value)
+                                }
+                            >
+                                <SelectTrigger className="w-[140px]">
+                                    <SelectValue placeholder="Tipe" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="manual">
+                                        Manual
+                                    </SelectItem>
+                                    <SelectItem value="multiply_children">
+                                        Kali Sub
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        )}
+
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            type="button"
+                            onClick={() => onDelete(item.id)}
+                        >
+                            Hapus
+                        </Button>
+                    </div>
                 </div>
-            ))}
-        </div>
-    );
+
+                {(item.children?.length ?? 0) > 0 &&
+                    renderTree(item.children!, level + 1)}
+            </div>
+        ));
+    };
+
+    return <div className="space-y-2">{renderTree(items)}</div>;
 }

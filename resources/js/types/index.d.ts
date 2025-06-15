@@ -18,7 +18,7 @@ export type CostItem = {
     name: string;
     amount: string;
     parentId: string | null;
-    calculationType: 'manual' | 'multiply_children';
+    calculation_type: 'manual' | 'multiply_children';
     children: CostItem[];
 };
 
@@ -26,10 +26,9 @@ export type FlatCostItem = {
     id: string;
     name: string;
     amount: number;
-    side: 'client' | 'company';
     type: 'fixed' | 'variable';
     parentId: string | null;
-    calculationType: 'manual' | 'multiply_children';
+    calculation_type: 'manual' | 'multiply_children';
 };
 
 export type ShipmentCostFormProps = {

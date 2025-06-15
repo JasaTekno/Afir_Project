@@ -12,7 +12,7 @@ import { ShipmentPDF } from '@/Features/Shipment/Components/pdf/ShipmentPdf';
 import Authenticated from '@/Layouts/AuthenticatedLayout';
 import { formatted } from '@/lib/utils';
 import { ShipmentDetailProps } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import {
     Building2,
@@ -99,13 +99,31 @@ const ShowShipmentDetail = ({ shipment }: ShipmentDetailProps) => {
     }) => (
         <Card className="h-fit">
             <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                    <Icon className="h-5 w-5" />
-                    {title}
-                </CardTitle>
-                <CardDescription>
-                    {costs.length} item{costs.length !== 1 ? 's' : ''} cost
-                </CardDescription>
+                <div className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                            <Icon className="h-5 w-5" />
+                            {title}
+                        </CardTitle>
+                        <CardDescription>
+                            {costs.length} item{costs.length !== 1 ? 's' : ''}{' '}
+                            cost
+                        </CardDescription>
+                    </div>
+
+                    {title === 'Company Cost' && (
+                        <Button
+                            size="sm"
+                            onClick={() =>
+                                router.visit(
+                                    `/shipments/${shipment.id}/edit-cost?side=company`,
+                                )
+                            }
+                        >
+                            Edit
+                        </Button>
+                    )}
+                </div>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="space-y-2">

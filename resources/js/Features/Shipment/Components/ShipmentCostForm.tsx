@@ -10,14 +10,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { formatted } from '@/lib/utils';
-import { FlatCostItem } from '@/types';
 import { useForm } from '@inertiajs/react';
 import { Calendar, Plus, Ship, User } from 'lucide-react';
 import { FormEvent, memo, useState } from 'react';
 import {
-    countCostItems,
-    DualCostItem,
-    flattenCostTree,
+    CostItemBase,
     useShipmentCostForm,
 } from '../Hooks/useShipmentCostForm';
 import { useCostTotals } from '../Hooks/useTotalCost';
@@ -31,12 +28,16 @@ const ShipmentCostForm = () => {
         variableCosts,
         setFixedCosts,
         setVariableCosts,
-        handleClientAddSubCost,
-        addVariableCostRoot,
+        countCostItems,
+        flattenCostTree,
+        addRootCostItem,
+        handleAddSubCost,
     } = useShipmentCostForm();
 
-    const { fixedClientCost, variableClientCost, totalClientCost } =
-        useCostTotals(fixedCosts, variableCosts);
+    const { totalCost, totalFixedCost, totalVariableCost } = useCostTotals(
+        fixedCosts,
+        variableCosts,
+    );
 
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(
         new Date(),
@@ -45,7 +46,7 @@ const ShipmentCostForm = () => {
     const { data, setData, post, processing, errors } = useForm<{
         title: string;
         date: string;
-        costs: FlatCostItem[];
+        costs: CostItemBase[];
     }>({
         title: '',
         date: '',
@@ -53,97 +54,62 @@ const ShipmentCostForm = () => {
     });
 
     const updateCostItem = (
-        list: DualCostItem[],
+        list: CostItemBase[],
         id: string,
-        field: 'name' | 'amount' | 'calculationType',
+        field: 'name' | 'amount' | 'calculation_type',
         value: string,
-    ): DualCostItem[] =>
-        list.map((item) => {
-            if (item.id === id) {
-                return { ...item, [field]: value };
-            }
-            return {
-                ...item,
-                children: updateCostItem(item.children, id, field, value),
-            };
-        });
+    ): CostItemBase[] =>
+        list.map((item) =>
+            item.id === id
+                ? { ...item, [field]: value }
+                : {
+                      ...item,
+                      children: updateCostItem(item.children, id, field, value),
+                  },
+        );
 
     const deleteCostItemRecursively = (
-        list: DualCostItem[],
+        list: CostItemBase[],
         id: string,
-    ): DualCostItem[] => {
-        return list
+    ): CostItemBase[] =>
+        list
             .filter((item) => item.id !== id)
             .map((item) => ({
                 ...item,
                 children: deleteCostItemRecursively(item.children, id),
             }));
-    };
 
-    const onClientFixedChange = (
-        id: string,
-        field: 'name' | 'amount' | 'calculationType',
-        value: string,
-    ) => {
-        setFixedCosts((prev) => {
-            const newClient = updateCostItem(prev.client, id, field, value);
+    const handleChange =
+        (setter: (cb: (prev: CostItemBase[]) => CostItemBase[]) => void) =>
+        (
+            id: string,
+            field: 'name' | 'amount' | 'calculation_type',
+            value: string,
+        ) => {
+            setter((prev) => updateCostItem(prev, id, field, value));
+        };
 
-            return { client: newClient };
-        });
-    };
-
-    const onClientVariableChange = (
-        id: string,
-        field: 'name' | 'amount' | 'calculationType',
-        value: string,
-    ) => {
-        setVariableCosts((prev) => {
-            const newClient = updateCostItem(prev.client, id, field, value);
-            return { client: newClient };
-        });
-    };
-
-    const onDeleteClientFixed = (id: string) => {
-        setFixedCosts((prev) => {
-            const newClient = deleteCostItemRecursively(prev.client, id);
-
-            return { client: newClient };
-        });
-    };
-
-    const onDeleteClientVariable = (id: string) => {
-        setVariableCosts((prev) => {
-            const newClient = deleteCostItemRecursively(prev.client, id);
-
-            return { client: newClient };
-        });
-    };
+    const handleDelete =
+        (setter: (cb: (prev: CostItemBase[]) => CostItemBase[]) => void) =>
+        (id: string) => {
+            setter((prev) => deleteCostItemRecursively(prev, id));
+        };
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        const flatFixedClient = flattenCostTree(
-            fixedCosts.client,
-            'client',
-            'fixed',
-        );
-
-        const flatVariableClient = flattenCostTree(
-            variableCosts.client,
-            'client',
-            'variable',
-        );
-
-        const allCosts = [...flatFixedClient, ...flatVariableClient];
+        const flatFixed = flattenCostTree(fixedCosts);
+        const flatVariable = flattenCostTree(variableCosts);
+        const allCosts = [...flatFixed, ...flatVariable];
 
         data.costs = allCosts;
 
         console.log(data);
 
-        // post(route('shipments.costs.store'), {
-        //     onSuccess: () => console.log('Berhasil disimpan!'),
-        //     onError: (e) => console.log(e),
-        // });
+        post(route('shipments.costs.store'), {
+            onSuccess: () => console.log('Berhasil disimpan'),
+            onError: (e) => console.error(e),
+        });
     };
 
     return (
@@ -212,7 +178,6 @@ const ShipmentCostForm = () => {
                 </Card>
 
                 <div className="mb-8">
-                    {/* Client Report */}
                     <Card className="border-0 bg-white shadow-sm">
                         <CardHeader className="pb-4">
                             <CardTitle className="flex items-center gap-2 text-gray-900">
@@ -230,27 +195,22 @@ const ShipmentCostForm = () => {
                                         variant="outline"
                                         className="border-green-200 bg-green-50 text-green-700"
                                     >
-                                        {countCostItems(fixedCosts.client)}{' '}
-                                        Items
+                                        {countCostItems(fixedCosts)} Items
                                     </Badge>
                                 </div>
                                 <div className="space-y-3">
                                     <MemoizedCostInputTree
-                                        items={fixedCosts.client}
-                                        onChange={onClientFixedChange}
+                                        items={fixedCosts}
+                                        onChange={handleChange(setFixedCosts)}
                                         onAddSubCost={(parentId) =>
-                                            handleClientAddSubCost(
-                                                parentId,
-                                                'fixed',
-                                            )
+                                            handleAddSubCost('fixed', parentId)
                                         }
-                                        onDelete={onDeleteClientFixed}
-                                        showReadOnlyIndicator={false}
+                                        onDelete={handleDelete(setFixedCosts)}
                                     />
                                 </div>
                                 <h3 className="text-right text-sm text-green-700">
                                     Total Fixed Cost:{' '}
-                                    {formatted(fixedClientCost)}
+                                    {formatted(totalFixedCost)}
                                 </h3>
                             </div>
 
@@ -265,35 +225,35 @@ const ShipmentCostForm = () => {
                                         variant="outline"
                                         className="border-green-200 bg-green-50 text-green-700"
                                     >
-                                        {countCostItems(variableCosts.client)}{' '}
-                                        Items
+                                        {countCostItems(variableCosts)} Items
                                     </Badge>
                                 </div>
                                 <div className="space-y-3">
                                     <MemoizedCostInputTree
-                                        items={variableCosts.client}
-                                        onChange={onClientVariableChange}
+                                        items={variableCosts}
+                                        onChange={handleChange(
+                                            setVariableCosts,
+                                        )}
                                         onAddSubCost={(parentId) =>
-                                            handleClientAddSubCost(
-                                                parentId,
+                                            handleAddSubCost(
                                                 'variable',
+                                                parentId,
                                             )
                                         }
-                                        onDelete={onDeleteClientVariable}
-                                        showReadOnlyIndicator={false}
+                                        onDelete={handleDelete(
+                                            setVariableCosts,
+                                        )}
                                     />
                                 </div>
                                 <h3 className="text-right text-sm text-green-700">
                                     Total Variable Cost:{' '}
-                                    {formatted(variableClientCost)}
+                                    {formatted(totalVariableCost)}
                                 </h3>
                                 <Button
                                     variant="outline"
                                     className="w-full border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50"
                                     type="button"
-                                    onClick={() =>
-                                        addVariableCostRoot('client')
-                                    }
+                                    onClick={() => addRootCostItem('variable')}
                                 >
                                     <Plus className="mr-2 h-4 w-4" />
                                     Variable Cost
@@ -305,7 +265,7 @@ const ShipmentCostForm = () => {
 
                 <div className="flex flex-col gap-4">
                     <h3 className="text-right text-sm text-green-700">
-                        Total Cost: {formatted(totalClientCost)}
+                        Total Cost: {formatted(totalCost)}
                     </h3>
 
                     <PrimaryButton
