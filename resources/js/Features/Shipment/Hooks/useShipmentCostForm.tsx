@@ -5,7 +5,7 @@ export type CostItemBase = {
     id: string;
     name: string;
     amount: string;
-    parentId: string | null;
+    parent_id: string | null;
     children: CostItemBase[];
     calculation_type: 'manual' | 'multiply_children';
     type: 'fixed' | 'variable';
@@ -22,12 +22,12 @@ export const countCostItems = (items?: CostItemBase[]): number => {
 
 export const flattenCostTree = (
     items: CostItemBase[],
-    parentId: string | null = null,
+    parent_id: string | null = null,
 ): CostItemBase[] => {
     return items.flatMap((item) => {
         const current: CostItemBase = {
             ...item,
-            parentId,
+            parent_id,
         };
         const children = flattenCostTree(item.children, item.id);
         return [current, ...children];
@@ -51,7 +51,7 @@ export const useShipmentCostForm = () => {
                 id: uuidv4(),
                 name: item.name,
                 amount: '',
-                parentId: null,
+                parent_id: null,
                 children: [],
                 calculation_type: 'manual',
                 type: 'fixed',
@@ -66,7 +66,7 @@ export const useShipmentCostForm = () => {
             id: uuidv4(),
             name: '',
             amount: '',
-            parentId: null,
+            parent_id: null,
             children: [],
             calculation_type: 'manual',
             type,
@@ -81,11 +81,11 @@ export const useShipmentCostForm = () => {
 
     const addSubCostToParent = (
         items: CostItemBase[],
-        parentId: string,
+        parent_id: string,
         newItem: CostItemBase,
     ): CostItemBase[] =>
         items.map((item) => {
-            if (item.id === parentId) {
+            if (item.id === parent_id) {
                 return {
                     ...item,
                     children: [...item.children, newItem],
@@ -93,16 +93,19 @@ export const useShipmentCostForm = () => {
             }
             return {
                 ...item,
-                children: addSubCostToParent(item.children, parentId, newItem),
+                children: addSubCostToParent(item.children, parent_id, newItem),
             };
         });
 
-    const handleAddSubCost = (type: 'fixed' | 'variable', parentId: string) => {
+    const handleAddSubCost = (
+        type: 'fixed' | 'variable',
+        parent_id: string,
+    ) => {
         const newItem: CostItemBase = {
             id: uuidv4(),
             name: '',
             amount: '',
-            parentId,
+            parent_id,
             children: [],
             calculation_type: 'manual',
             type,
@@ -110,11 +113,11 @@ export const useShipmentCostForm = () => {
 
         if (type === 'fixed') {
             setFixedCosts((prev) =>
-                addSubCostToParent(prev, parentId, newItem),
+                addSubCostToParent(prev, parent_id, newItem),
             );
         } else {
             setVariableCosts((prev) =>
-                addSubCostToParent(prev, parentId, newItem),
+                addSubCostToParent(prev, parent_id, newItem),
             );
         }
     };

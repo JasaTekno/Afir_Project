@@ -21,12 +21,12 @@ export function updateItemAndMirror(
 export function addSubCostAndMirror(
     clientList: DualCostItem[],
     companyList: DualCostItem[],
-    parentId: string,
+    parent_id: string,
     newSub: DualCostItem,
 ): [DualCostItem[], DualCostItem[]] {
     const addToParent = (list: DualCostItem[]): DualCostItem[] =>
         list.map((item) => {
-            if (item.id === parentId) {
+            if (item.id === parent_id) {
                 return {
                     ...item,
                     children: [...item.children, newSub],

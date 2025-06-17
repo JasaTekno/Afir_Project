@@ -14,7 +14,28 @@ use Carbon\Carbon;
 
 class ShipmentController extends Controller
 {
-    protected function storeCostItemsRecursive(array $items, string $shipmentId, string $side, ?string $parentId = null)
+    protected function buildNestedCosts(array $flatCosts): array
+    {
+        $items = [];
+        $map = [];
+
+        foreach ($flatCosts as $cost) {
+            $id = $cost['id'];
+            $map[$id] = $cost;
+            $map[$id]['children'] = [];
+        }
+
+        foreach ($map as $id => &$cost) {
+            if (!empty($cost['parent_id'])) {
+                $map[$cost['parent_id']]['children'][] = &$cost;
+            } else {
+                $items[] = &$cost;
+            }
+        }
+
+        return $items;
+    }
+    protected function storeCostItemsRecursive(array $items, string $shipmentId, string $side, ?string $parent_id = null)
     {
         foreach ($items as $item) {
             $costItem = CostItem::create([
@@ -24,7 +45,7 @@ class ShipmentController extends Controller
                 'amount' => $item['amount'] ?? 0,
                 'calculation_type' => $item['calculation_type'] ?? 'manual',
                 'type' => $item['type'] ?? 'fixed',
-                'parent_id' => $parentId,
+                'parent_id' => $parent_id,
             ]);
 
             if (!empty($item['children'])) {
@@ -32,7 +53,6 @@ class ShipmentController extends Controller
             }
         }
     }
-
     protected function calculateAmount(string $id, array &$costsById, array &$calculated = []): float
     {
         if (isset($calculated[$id])) {
@@ -40,7 +60,7 @@ class ShipmentController extends Controller
         }
 
         $cost = $costsById[$id];
-        $children = array_filter($costsById, fn($c) => ($c['parentId'] ?? null) === $id);
+        $children = array_filter($costsById, fn($c) => ($c['parent_id'] ?? null) === $id);
 
         if (($cost['calculation_type'] ?? null) === 'manual') {
             if (count($children) > 0) {
@@ -80,8 +100,7 @@ class ShipmentController extends Controller
         $calculated[$id] = floatval($cost['amount']);
         return $calculated[$id];
     }
-
-    protected function flattenCosts(array $nestedCosts, ?string $parentId = null, array &$flat = []): array
+    protected function flattenCosts(array $nestedCosts, ?string $parent_id = null, array &$flat = []): array
     {
         foreach ($nestedCosts as $node) {
             $id = $node['id'] ?? (string) Str::uuid();
@@ -92,7 +111,7 @@ class ShipmentController extends Controller
                 'amount' => $node['amount'] ?? 0,
                 'type' => $node['type'] ?? 'fixed',
                 'calculation_type' => $node['calculation_type'] ?? 'manual',
-                'parentId' => $parentId,
+                'parent_id' => $parent_id,
             ];
 
             if (!empty($node['children'])) {
@@ -102,7 +121,6 @@ class ShipmentController extends Controller
 
         return $flat;
     }
-
     protected function calculateAmountRecursive(array &$items): void
     {
         $flat = [];
@@ -115,7 +133,6 @@ class ShipmentController extends Controller
 
         $this->applyCalculatedAmountToNested($items, $flat);
     }
-
     protected function applyCalculatedAmountToNested(array &$items, array $flat): void
     {
         foreach ($items as &$item) {
@@ -128,8 +145,6 @@ class ShipmentController extends Controller
             }
         }
     }
-
-
     protected function recalculateTotalForSide(Shipment $shipment, string $side)
     {
         $totalFixed = $shipment->costItems()
@@ -229,10 +244,10 @@ class ShipmentController extends Controller
             'costs' => 'required|array',
             'costs.*.id' => 'required|uuid',
             'costs.*.name' => 'string',
-            'costs.*.amount' => 'required|numeric',
+            'costs.*.amount' => 'nullable|numeric|min:0',
             'costs.*.calculation_type' => 'nullable|in:manual,multiply_children',
             'costs.*.type' => 'required|in:fixed,variable',
-            'costs.*.parentId' => 'nullable|uuid',
+            'costs.*.parent_id' => 'nullable|uuid',
         ])->validate();
 
         DB::beginTransaction();
@@ -247,27 +262,28 @@ class ShipmentController extends Controller
             $costsById = $costs->keyBy('id')->toArray();
 
             $calculated = [];
-            $rootCosts = collect($costsById)->filter(fn($c) => empty($c['parentId']));
+            $rootCosts = collect($costsById)->filter(fn($c) => empty($c['parent_id']));
 
             foreach ($rootCosts as $rootCost) {
                 $this->calculateAmount($rootCost['id'], $costsById, $calculated);
             }
 
-            $insertCostItem = function ($costId, $parentId = null, $side = 'client') use (&$insertCostItem, $shipment, $costsById) {
+            $insertCostItem = function ($costId, $parent_id = null, $side = 'client') use (&$insertCostItem, $shipment, $costsById) {
                 $cost = $costsById[$costId];
+                $amount = is_numeric($cost['amount']) ? $cost['amount'] : 0;
 
                 $item = $shipment->costItems()->create([
                     'id' => Str::uuid(),
                     'name' => $cost['name'],
-                    'amount' => $cost['amount'],
+                    'amount' => $amount,
                     'side' => $side,
                     'type' => $cost['type'],
-                    'parent_id' => $parentId,
+                    'parent_id' => $parent_id,
                     'calculation_type' => $cost['calculation_type'] ?? 'manual',
                 ]);
 
 
-                $children = collect($costsById)->filter(fn($c) => ($c['parentId'] ?? null) === $costId);
+                $children = collect($costsById)->filter(fn($c) => ($c['parent_id'] ?? null) === $costId);
 
                 foreach ($children as $child) {
                     $insertCostItem($child['id'], $item->id, $side);
@@ -337,9 +353,11 @@ class ShipmentController extends Controller
                     ->where('side', $validated['side'])
                     ->delete();
 
-                $this->calculateAmountRecursive($validated['costs']);
+                $nestedCosts = $this->buildNestedCosts($validated['costs']);
 
-                $this->storeCostItemsRecursive($validated['costs'], $shipment->id, $validated['side']);
+                $this->calculateAmountRecursive($nestedCosts);
+
+                $this->storeCostItemsRecursive($nestedCosts, $shipment->id, $validated['side']);
 
                 $this->recalculateTotalForSide($shipment, $validated['side']);
             });

@@ -17,7 +17,7 @@ export type CostItem = {
     id: string;
     name: string;
     amount: string;
-    parentId: string | null;
+    parent_id: string | null;
     calculation_type: 'manual' | 'multiply_children';
     children: CostItem[];
 };
@@ -27,7 +27,7 @@ export type FlatCostItem = {
     name: string;
     amount: number;
     type: 'fixed' | 'variable';
-    parentId: string | null;
+    parent_id: string | null;
     calculation_type: 'manual' | 'multiply_children';
 };
 

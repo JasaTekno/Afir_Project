@@ -17,7 +17,7 @@ type Props = {
         field: 'name' | 'amount' | 'calculation_type',
         value: string,
     ) => void;
-    onAddSubCost: (parentId: string) => void;
+    onAddSubCost: (parent_id: string) => void;
     onDelete: (id: string) => void;
 };
 

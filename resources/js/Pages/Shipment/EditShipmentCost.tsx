@@ -7,8 +7,10 @@ import { CostInputTree } from '@/Features/Shipment/Components/CostInputTree';
 import {
     CostItemBase,
     countCostItems,
+    flattenCostTree,
 } from '@/Features/Shipment/Hooks/useShipmentCostForm';
 import { useCostTotals } from '@/Features/Shipment/Hooks/useTotalCost';
+import { buildCostTree } from '@/Features/Shipment/Utils/Helper';
 import Authenticated from '@/Layouts/AuthenticatedLayout';
 import { formatted } from '@/lib/utils';
 import { Head, useForm } from '@inertiajs/react';
@@ -23,7 +25,9 @@ type Props = {
 const MemoizedCostInputTree = memo(CostInputTree);
 
 const EditShipmentCost = ({ shipment, costItems, side }: Props) => {
-    const [items, setItems] = useState<CostItemBase[]>(costItems);
+    const [items, setItems] = useState<CostItemBase[]>(() =>
+        buildCostTree(costItems),
+    );
 
     const { data, setData, put, processing } = useForm({
         side,
@@ -53,7 +57,7 @@ const EditShipmentCost = ({ shipment, costItems, side }: Props) => {
         setData('costs', updatedCosts);
     };
 
-    const handleAddSubCost = (parentId: string) => {
+    const handleAddSubCost = (parent_id: string) => {
         const findItemById = (
             items: CostItemBase[],
             id: string,
@@ -68,7 +72,7 @@ const EditShipmentCost = ({ shipment, costItems, side }: Props) => {
             return undefined;
         };
 
-        const parentItem = findItemById(items, parentId);
+        const parentItem = findItemById(items, parent_id);
         if (!parentItem) return;
 
         const newItem: CostItemBase = {
@@ -76,14 +80,14 @@ const EditShipmentCost = ({ shipment, costItems, side }: Props) => {
             name: '',
             amount: '',
             calculation_type: 'manual',
-            parentId,
+            parent_id,
             type: parentItem.type,
             children: [],
         };
 
         const addToParent = (list: CostItemBase[]): CostItemBase[] =>
             list.map((item) => {
-                if (item.id === parentId) {
+                if (item.id === parent_id) {
                     return {
                         ...item,
                         children: [...(item.children ?? []), newItem],
@@ -118,6 +122,9 @@ const EditShipmentCost = ({ shipment, costItems, side }: Props) => {
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        const flatData = flattenCostTree(items);
+        data.costs = flatData;
 
         put(`/shipments/${shipment.id}/update-cost`, {
             onSuccess: () => console.log('Berhasil disimpan'),
@@ -182,7 +189,7 @@ const EditShipmentCost = ({ shipment, costItems, side }: Props) => {
                                             id: crypto.randomUUID(),
                                             name: '',
                                             amount: '',
-                                            parentId: null,
+                                            parent_id: null,
                                             children: [],
                                             calculation_type: 'manual',
                                             type: 'fixed',
@@ -230,7 +237,7 @@ const EditShipmentCost = ({ shipment, costItems, side }: Props) => {
                                             id: crypto.randomUUID(),
                                             name: '',
                                             amount: '',
-                                            parentId: null,
+                                            parent_id: null,
                                             children: [],
                                             calculation_type: 'manual',
                                             type: 'variable',

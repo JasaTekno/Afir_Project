@@ -104,8 +104,6 @@ const ShipmentCostForm = () => {
 
         data.costs = allCosts;
 
-        console.log(data);
-
         post(route('shipments.costs.store'), {
             onSuccess: () => console.log('Berhasil disimpan'),
             onError: (e) => console.error(e),
@@ -202,8 +200,8 @@ const ShipmentCostForm = () => {
                                     <MemoizedCostInputTree
                                         items={fixedCosts}
                                         onChange={handleChange(setFixedCosts)}
-                                        onAddSubCost={(parentId) =>
-                                            handleAddSubCost('fixed', parentId)
+                                        onAddSubCost={(parent_id) =>
+                                            handleAddSubCost('fixed', parent_id)
                                         }
                                         onDelete={handleDelete(setFixedCosts)}
                                     />
@@ -234,10 +232,10 @@ const ShipmentCostForm = () => {
                                         onChange={handleChange(
                                             setVariableCosts,
                                         )}
-                                        onAddSubCost={(parentId) =>
+                                        onAddSubCost={(parent_id) =>
                                             handleAddSubCost(
                                                 'variable',
-                                                parentId,
+                                                parent_id,
                                             )
                                         }
                                         onDelete={handleDelete(

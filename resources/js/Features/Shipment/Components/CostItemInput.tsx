@@ -2,7 +2,7 @@ interface DualCostItem {
     id: number;
     name: string;
     amount: string;
-    parentId: number | null;
+    parent_id: number | null;
     children: DualCostItem[];
     isClientOwned?: boolean;
     mirroredFromId?: number;
