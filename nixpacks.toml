@@ -4,7 +4,7 @@ nixPkgs = ['php', 'phpPackages.composer', 'nodejs_20', 'postgresql']
 [phases.install]
 cmds = [
   'composer install --no-dev --optimize-autoloader',
-  'npm ci'
+  'npm install'
 ]
 
 [phases.build]
