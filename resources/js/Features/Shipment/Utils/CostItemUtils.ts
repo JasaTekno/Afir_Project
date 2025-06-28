@@ -1,4 +1,12 @@
-import { DualCostItem } from '../Hooks/useShipmentCostForm';
+interface DualCostItem {
+    id: string;
+    name: string;
+    amount: string;
+    parent_id: number | null;
+    children: DualCostItem[];
+    isClientOwned?: boolean;
+    mirroredFromId?: number;
+}
 
 export function updateItemAndMirror(
     clientList: DualCostItem[],
