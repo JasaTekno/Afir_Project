@@ -10,7 +10,7 @@ services:
             - appdata:/var/www/html
         restart: unless-stopped
         environment:
-            DB_HOST: ${DB_HOST}
+            DB_HOST: 31.97.159.107
             DB_PORT: ${DB_PORT}
             DB_DATABASE: ${DB_DATABASE}
             DB_USERNAME: ${DB_USERNAME}
