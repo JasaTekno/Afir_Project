@@ -4,7 +4,7 @@ services:
             context: .
             dockerfile: docker/php/Dockerfile
         ports:
-            - '8080:8080'
+            - '9000:9000'
         container_name: jasa_angkut_barang
         volumes:
             - appdata:/var/www/html
