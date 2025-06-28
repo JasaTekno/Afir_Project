@@ -3,6 +3,8 @@ services:
         build:
             context: .
             dockerfile: docker/php/Dockerfile
+        ports:
+            - '8080:8080'
         container_name: jasa_angkut_barang
         volumes:
             - appdata:/var/www/html
