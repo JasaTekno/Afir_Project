@@ -7,7 +7,7 @@ services:
             - '9000:9000'
         container_name: jasa_angkut_barang
         volumes:
-            - laravel_data:/var/www/html
+            - laravel_data:/var/www/html/jasa_angkut_barang
         restart: unless-stopped
         environment:
             DB_HOST: ${DB_HOST}
