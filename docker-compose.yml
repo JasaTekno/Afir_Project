@@ -3,13 +3,11 @@ services:
         build:
             context: .
             dockerfile: docker/php/Dockerfile
-        container_name: client_1_jab_app
-        volumes:
-            - ./public:/var/www/html/public:ro
+        container_name: jasa_angkut_barang
         expose:
             - 9000
         ports:
-            - '9001:9000'
+            - '9001:9000' # host -> container
         restart: unless-stopped
         environment:
             DB_HOST: ${DB_HOST}
