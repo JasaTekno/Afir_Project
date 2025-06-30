@@ -4,8 +4,6 @@ services:
             context: .
             dockerfile: docker/php/Dockerfile
         container_name: jasa_angkut_barang_app
-        volumes:
-            - ./:/var/www/html
         expose:
             - '9000'
         networks:
