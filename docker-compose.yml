@@ -7,9 +7,9 @@ services:
         volumes:
             - ./:/var/www/html
         expose:
-            - '9000' # internal FPM port
-        ports:
-            - '9001:9000' # host to container port mapping
+            - '9000'
+        networks:
+            - web
         restart: unless-stopped
         environment:
             DB_HOST: ${DB_HOST}
@@ -22,3 +22,7 @@ services:
             interval: 30s
             timeout: 10s
             retries: 3
+
+networks:
+    web:
+        external: true
