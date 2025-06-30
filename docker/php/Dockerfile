@@ -1,12 +1,11 @@
-# STAGE 1: Node builder (build frontend assets)
+# Node builder stage
 FROM node:20-bullseye-slim AS node-builder
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
 RUN npm ci
 
-COPY resources/ resources/
-COPY vite.config.* ./
+COPY . .
 RUN npm run build
 
 # STAGE 2: PHP builder
