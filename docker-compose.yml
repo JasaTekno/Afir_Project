@@ -7,7 +7,7 @@ services:
             - '9000:9000'
         container_name: jasa_angkut_barang
         volumes:
-            - /var/www/html:/var/www/html
+            - laravel_data:/var/www/html
         restart: unless-stopped
         environment:
             DB_HOST: ${DB_HOST}
@@ -20,3 +20,6 @@ services:
             interval: 30s
             timeout: 10s
             retries: 3
+
+volumes:
+    laravel_data:
