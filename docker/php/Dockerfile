@@ -24,11 +24,11 @@ FROM php-base AS php-builder
 
 WORKDIR /var/www/html
 
-COPY . .
-
 COPY --from=node-builder /app/public/build ./public/build
-
+COPY composer.* ./
 RUN composer install --optimize-autoloader
+
+COPY . .
 
 RUN if [ ! -f .env ]; then cp .env.example .env; fi
 RUN php artisan key:generate
