@@ -41,7 +41,7 @@ WORKDIR /var/www/html
 
 COPY . .
 COPY .env.production .env
-COPY --from=node-builder /app/public/build ./public/build
+COPY --from=node-builder /app/public ./public
 
 RUN composer install --optimize-autoloader --no-dev --prefer-dist --no-interaction
 
