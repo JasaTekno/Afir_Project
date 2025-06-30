@@ -63,10 +63,13 @@ RUN chown -R www-data:www-data \
 # STAGE 3: Final runtime container
 FROM php:8.3-fpm-alpine AS final
 
+# Install ulang ekstensi di container final
+RUN apk add --no-cache \
+    postgresql-dev \
+    libpq \
+    && docker-php-ext-install pdo pdo_pgsql
+
 COPY --from=php-builder /var/www/html /var/www/html
-
 WORKDIR /var/www/html
-
 EXPOSE 9000
-
 CMD ["php-fpm"]
