@@ -1,44 +1,50 @@
-# STAGE 1: Node builder (build frontend assets)
+# Stage 1: Node untuk build Inertia frontend
 FROM node:20-bullseye-slim AS node-builder
 WORKDIR /app
-COPY package.json package-lock.json* ./
+COPY package*.json ./
 RUN npm ci
-COPY . .
+COPY resources resources
+COPY vite.config.* ./
 RUN npm run build
 
-# STAGE 2: PHP builder
-FROM php:8.3-fpm-alpine AS php-builder
+# Stage 2: Laravel App
+FROM php:8.3-fpm-alpine
 
+# Install system dependencies
 RUN apk add --no-cache \
-    bash git unzip curl libzip-dev libpng-dev libjpeg-turbo-dev icu-dev oniguruma-dev postgresql-dev \
-    && docker-php-ext-install pdo pdo_pgsql zip intl opcache
+    bash \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    libzip-dev \
+    oniguruma-dev \
+    curl \
+    git \
+    unzip \
+    zlib-dev \
+    icu-dev
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Install PHP extensions
+RUN docker-php-ext-install pdo pdo_pgsql zip mbstring intl
 
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Set workdir
 WORKDIR /var/www/html
 
-# Salin semua isi proyek Laravel (langsung dari root)
+# Copy Laravel files
 COPY . .
 
-# Salin hasil build dari node-builder
+# Copy frontend build
 COPY --from=node-builder /app/public/build ./public/build
 
-# Inject env
-COPY .env.production .env
+# Install dependencies
+RUN composer install --no-dev --optimize-autoloader
 
-# Install deps
-RUN composer install --optimize-autoloader --no-dev --no-interaction --prefer-dist
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Laravel boot
-RUN php artisan key:generate --force \
- && php artisan config:clear \
- && php artisan config:cache \
- && php artisan route:cache \
- && php artisan view:cache
+# Expose port
+EXPOSE 9000
 
-RUN chown -R www-data:www-data storage bootstrap/cache public/build
-
-FROM php:8.3-fpm-alpine AS final
-COPY --from=php-builder /var/www/html /var/www/html
-WORKDIR /var/www/html
 CMD ["php-fpm"]

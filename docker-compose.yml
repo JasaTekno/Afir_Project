@@ -4,6 +4,8 @@ services:
             context: .
             dockerfile: docker/php/Dockerfile
         container_name: client_1_jab_app
+        expose:
+            - 9000
         ports:
             - '9001:9000'
         restart: unless-stopped
@@ -18,6 +20,3 @@ services:
             interval: 30s
             timeout: 10s
             retries: 3
-
-volumes:
-    client_1_jab_data:
