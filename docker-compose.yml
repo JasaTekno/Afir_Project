@@ -8,7 +8,13 @@ services:
         container_name: client_1_jab_app
         volumes:
             - client_1_jab_data:/var/www/html
-            - ./env.production:/var/www/html/.env:ro
+            - ./env.production:/var/www/env.production:ro
+        entrypoint:
+            [
+                '/bin/sh',
+                '-c',
+                'cp /var/www/env.production /var/www/html/.env && php-fpm',
+            ]
         restart: unless-stopped
         environment:
             DB_HOST: ${DB_HOST}
