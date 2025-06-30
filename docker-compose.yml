@@ -4,10 +4,10 @@ services:
             context: .
             dockerfile: docker/php/Dockerfile
         ports:
-            - '9000:9000'
-        container_name: jasa_angkut_barang
+            - '9001:9000'
+        container_name: client_1_jab_app
         volumes:
-            - ./app:/var/www/html
+            - client_1_jab_data:/var/www/html
             - ./env.production:/var/www/html/.env:ro
         restart: unless-stopped
         environment:
@@ -23,4 +23,4 @@ services:
             retries: 3
 
 volumes:
-    laravel_data:
+    client_1_jab_data:
