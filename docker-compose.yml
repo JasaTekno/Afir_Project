@@ -3,8 +3,6 @@ services:
         build:
             context: .
             dockerfile: docker/php/Dockerfile
-        volumes:
-            - ./:/var/www/html
         container_name: jasa_angkut_barang_app
         expose:
             - '9000'
