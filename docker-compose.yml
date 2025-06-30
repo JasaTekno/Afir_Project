@@ -25,6 +25,7 @@ services:
 
 volumes:
     jasa_angkut_barang_public:
+        name: jasa_angkut_barang_public
 
 networks:
     web:
