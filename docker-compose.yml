@@ -4,6 +4,8 @@ services:
             context: .
             dockerfile: docker/php/Dockerfile
         container_name: client_1_jab_app
+        volumes:
+            - ./:/var/www/html
         expose:
             - 9000
         ports:
