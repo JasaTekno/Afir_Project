@@ -7,7 +7,7 @@ services:
             - '9000:9000'
         container_name: jasa_angkut_barang
         volumes:
-            - appdata:/var/www/html
+            - /var/www/html:/var/www/html
         restart: unless-stopped
         environment:
             DB_HOST: ${DB_HOST}
@@ -20,6 +20,3 @@ services:
             interval: 30s
             timeout: 10s
             retries: 3
-
-volumes:
-    appdata:
