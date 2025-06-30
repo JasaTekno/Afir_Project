@@ -1,3 +1,4 @@
+# STAGE 1: Node builder (build frontend assets)
 FROM node:20-bullseye-slim AS node-builder
 WORKDIR /app
 COPY package.json package-lock.json* ./
@@ -5,68 +6,39 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM php:8.3-fpm-alpine AS final
+# STAGE 2: PHP builder
+FROM php:8.3-fpm-alpine AS php-builder
 
-# Install system dependencies
 RUN apk add --no-cache \
-    bash \
-    git \
-    unzip \
-    curl \
-    libzip-dev \
-    libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
-    icu-dev \
-    oniguruma-dev \
-    postgresql-dev
+    bash git unzip curl libzip-dev libpng-dev libjpeg-turbo-dev icu-dev oniguruma-dev postgresql-dev \
+    && docker-php-ext-install pdo pdo_pgsql zip intl opcache
 
-# Configure and install PHP extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-        pdo \
-        pdo_pgsql \
-        zip \
-        intl \
-        opcache \
-        gd \
-        mbstring
-
-# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory
 WORKDIR /var/www/html
 
-# Copy application files
+# Salin semua isi proyek Laravel (langsung dari root)
 COPY . .
 
-# Copy built assets from node builder (Inertia build output)
+# Salin hasil build dari node-builder
 COPY --from=node-builder /app/public/build ./public/build
 
-# Install PHP dependencies
+# Inject env
+COPY .env.production .env
+
+# Install deps
 RUN composer install --optimize-autoloader --no-dev --no-interaction --prefer-dist
 
-# Set proper permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache \
-    && mkdir -p /var/www/html/public/hot
+# Laravel boot
+RUN php artisan key:generate --force \
+ && php artisan config:clear \
+ && php artisan config:cache \
+ && php artisan route:cache \
+ && php artisan view:cache
 
-# Create entrypoint script for Laravel + Inertia
-RUN echo '#!/bin/sh' > /entrypoint.sh \
-    && echo 'set -e' >> /entrypoint.sh \
-    && echo 'if [ -f /var/www/html/.env ]; then' >> /entrypoint.sh \
-    && echo '    php artisan config:clear' >> /entrypoint.sh \
-    && echo '    php artisan cache:clear' >> /entrypoint.sh \
-    && echo '    php artisan route:clear' >> /entrypoint.sh \
-    && echo '    php artisan view:clear' >> /entrypoint.sh \
-    && echo '    php artisan key:generate --force || true' >> /entrypoint.sh \
-    && echo 'fi' >> /entrypoint.sh \
-    && echo 'exec "$@"' >> /entrypoint.sh \
-    && chmod +x /entrypoint.sh
+RUN chown -R www-data:www-data storage bootstrap/cache public/build
 
-ENTRYPOINT ["/entrypoint.sh"]
+FROM php:8.3-fpm-alpine AS final
+COPY --from=php-builder /var/www/html /var/www/html
+WORKDIR /var/www/html
 CMD ["php-fpm"]
-
-EXPOSE 9000

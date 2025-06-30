@@ -3,12 +3,9 @@ services:
         build:
             context: .
             dockerfile: docker/php/Dockerfile
+        container_name: client_1_jab_app
         ports:
             - '9001:9000'
-        container_name: client_1_jab_app
-        volumes:
-            - client_1_jab_data:/var/www/html
-            - ./env.production:/var/www/html/.env:ro
         restart: unless-stopped
         environment:
             DB_HOST: ${DB_HOST}
