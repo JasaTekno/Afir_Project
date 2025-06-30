@@ -8,13 +8,7 @@ services:
         container_name: client_1_jab_app
         volumes:
             - client_1_jab_data:/var/www/html
-            - ./env.production:/var/www/env.production:ro
-        entrypoint:
-            [
-                '/bin/sh',
-                '-c',
-                'cp /var/www/env.production /var/www/html/.env && php-fpm',
-            ]
+            - ./env.production:/var/www/html/.env:ro
         restart: unless-stopped
         environment:
             DB_HOST: ${DB_HOST}
@@ -27,6 +21,7 @@ services:
             interval: 30s
             timeout: 10s
             retries: 3
+        network_mode: host
 
 volumes:
     client_1_jab_data:
