@@ -10,14 +10,14 @@ WORKDIR /var/www/html
 
 FROM node:20-bullseye-slim AS node-builder
 WORKDIR /app
-COPY app/package.json app/package-lock.json* ./
+COPY package.json package-lock.json* ./
 RUN npm ci
-COPY app ./
+COPY . .
 RUN npm run build
 
 FROM base AS final
 WORKDIR /var/www/html
-COPY app ./
+COPY . .
 COPY --from=node-builder /app/public/build ./public/build
 RUN composer install --optimize-autoloader --no-dev --no-interaction --prefer-dist
 RUN php artisan key:generate || true
