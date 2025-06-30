@@ -21,7 +21,6 @@ services:
             interval: 30s
             timeout: 10s
             retries: 3
-        network_mode: host
 
 volumes:
     client_1_jab_data:
