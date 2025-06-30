@@ -4,6 +4,9 @@ services:
             context: .
             dockerfile: docker/php/Dockerfile
         container_name: jasa_angkut_barang
+        volumes:
+            - ./:/var/www/html
+            - jasa_angkut_barang_public:/var/www/html/public:ro
         expose:
             - '9000'
         networks:
@@ -20,6 +23,9 @@ services:
             interval: 30s
             timeout: 10s
             retries: 3
+
+volumes:
+    jasa_angkut_barang_public:
 
 networks:
     web:
