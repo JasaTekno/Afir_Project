@@ -1,23 +1,33 @@
 [phases.setup]
 nixPkgs = [
-  "php",
-  "phpPackages.composer",
-  "phpPackages.bcmath",
-  "phpPackages.mbstring",
-  "phpPackages.pdo",
-  "phpPackages.pdo_pgsql",
-  "phpPackages.tokenizer",
-  "phpPackages.xml",
-  "phpPackages.curl",
-  "phpPackages.zip",
-  "phpPackages.json",
-  "nginx",
-  "nodejs",
-  "git",
-  "bash",
-  "coreutils",
-  "python311Packages.supervisor"
+  # Tooling umum
+  "bash"
+  "git"
+  "unzip"
+  "curl"
+
+  # PHP + ekstensi penting
+  "php"
+  "phpPackages.composer"
+  "phpExtensions.pdo"
+  "phpExtensions.pdo_pgsql"
+  "phpExtensions.zip"
+  "phpExtensions.intl"
+  "phpExtensions.opcache"
+
+  # Libs pendukung ekstensi
+  "libzip"
+  "libpng"
+  "libjpeg"
+  "icu"                # untuk intl
+  "oniguruma"          # regex engine (untuk mbstring/preg, optional)
+  "postgresql"
+  
+  # Node.js & NPM
+  "nodejs_20"
+  "npm"
 ]
+
 
 [phases.build]
 cmds = [
