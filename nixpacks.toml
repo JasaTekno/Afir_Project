@@ -17,7 +17,8 @@ nixPkgs = [
   "icu",
   "oniguruma",
   "postgresql",
-  "nodejs_20"
+  "nodejs_20",
+  "python311Packages.supervisor"
 ]
 
 
