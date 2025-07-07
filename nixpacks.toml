@@ -17,8 +17,7 @@ nixPkgs = [
   "icu",
   "oniguruma",
   "postgresql",
-  "nodejs_20",
-  "npm",
+  "nodejs_20"
 ]
 
 
