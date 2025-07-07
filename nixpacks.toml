@@ -19,7 +19,7 @@ nixPkgs = [
   "postgresql",
   "nodejs_20",
   "nginx",
-  "supervisor"
+  "python311Packages.supervisor"
 ]
 
 [phases.build]
