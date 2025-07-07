@@ -12,7 +12,7 @@ nixPkgs = [
   "phpPackages.zip",
   "phpPackages.json",
   "nginx",
-  "nodejs_20",
+  "nodejs",
   "git",
   "bash",
   "coreutils",
