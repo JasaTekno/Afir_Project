@@ -1,12 +1,10 @@
 [phases.setup]
 nixPkgs = [
-  # Tooling umum
   "bash"
   "git"
   "unzip"
   "curl"
 
-  # PHP + ekstensi penting
   "php"
   "phpPackages.composer"
   "phpExtensions.pdo"
@@ -15,15 +13,13 @@ nixPkgs = [
   "phpExtensions.intl"
   "phpExtensions.opcache"
 
-  # Libs pendukung ekstensi
   "libzip"
   "libpng"
   "libjpeg"
-  "icu"                # untuk intl
-  "oniguruma"          # regex engine (untuk mbstring/preg, optional)
+  "icu"
+  "oniguruma"
   "postgresql"
   
-  # Node.js & NPM
   "nodejs_20"
   "npm"
 ]
