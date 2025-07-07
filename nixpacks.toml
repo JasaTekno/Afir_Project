@@ -1,27 +1,24 @@
 [phases.setup]
 nixPkgs = [
-  "bash"
-  "git"
-  "unzip"
-  "curl"
-
-  "php"
-  "phpPackages.composer"
-  "phpExtensions.pdo"
-  "phpExtensions.pdo_pgsql"
-  "phpExtensions.zip"
-  "phpExtensions.intl"
-  "phpExtensions.opcache"
-
-  "libzip"
-  "libpng"
-  "libjpeg"
-  "icu"
-  "oniguruma"
-  "postgresql"
-  
-  "nodejs_20"
-  "npm"
+  "bash",
+  "git",
+  "unzip",
+  "curl",
+  "php",
+  "phpPackages.composer",
+  "phpExtensions.pdo",
+  "phpExtensions.pdo_pgsql",
+  "phpExtensions.zip",
+  "phpExtensions.intl",
+  "phpExtensions.opcache",
+  "libzip",
+  "libpng",
+  "libjpeg",
+  "icu",
+  "oniguruma",
+  "postgresql",
+  "nodejs_20",
+  "npm",
 ]
 
 
