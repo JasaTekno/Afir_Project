@@ -22,6 +22,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (env('APP_ENV') !== 'local') {
+            URL::forceScheme('https');
+        }
         Vite::prefetch(concurrency: 3);
         CostItem::observe(CostItemObserver::class);
     }
