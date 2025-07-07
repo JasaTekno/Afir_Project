@@ -18,9 +18,9 @@ nixPkgs = [
   "oniguruma",
   "postgresql",
   "nodejs_20",
-  "python311Packages.supervisor"
+  "nginx",
+  "supervisor"
 ]
-
 
 [phases.build]
 cmds = [
@@ -30,6 +30,7 @@ cmds = [
   "php artisan config:cache",
   "php artisan route:cache",
   "php artisan view:cache",
+  "php artisan key:generate || true",
   "mkdir -p /etc/supervisor/conf.d/",
   "cp /assets/worker-*.conf /etc/supervisor/conf.d/",
   "cp /assets/supervisord.conf /etc/supervisord.conf",
