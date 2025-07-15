@@ -7,7 +7,7 @@ export type CostItemBase = {
     amount: string;
     parent_id: string | null;
     children: CostItemBase[];
-    calculation_type: 'manual' | 'multiply_children';
+    calculation_type: 'manual' | 'multiply_children' | 'sum_with_children';
     type: 'fixed' | 'variable';
 };
 

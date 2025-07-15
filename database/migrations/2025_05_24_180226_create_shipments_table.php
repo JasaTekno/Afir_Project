@@ -40,7 +40,7 @@ return new class extends Migration
 
             $table->enum('side', ['client', 'company']);
             $table->enum('type', ['fixed', 'variable']);
-            $table->enum('calculation_type', ['manual', 'multiply_children'])->default('manual');
+            $table->enum('calculation_type', ['manual', 'multiply_children', 'sum_with_children'])->default('manual');
 
             $table->string('name');
             $table->decimal('amount', 20, 2)->default(0);

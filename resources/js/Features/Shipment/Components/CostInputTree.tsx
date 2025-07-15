@@ -86,6 +86,9 @@ export function CostInputTree({
                                     <SelectItem value="multiply_children">
                                         Kali Sub
                                     </SelectItem>
+                                    <SelectItem value="sum_with_children">
+                                        Jumlah + Sub
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         )}
