@@ -62,44 +62,44 @@ class ShipmentController extends Controller
         $cost = $costsById[$id];
         $children = array_filter($costsById, fn($c) => ($c['parent_id'] ?? null) === $id);
 
-        if (($cost['calculation_type'] ?? null) === 'manual') {
-            if (count($children) > 0) {
+        switch ($cost['calculation_type'] ?? 'manual') {
+            case 'manual':
                 $sum = 0;
                 foreach ($children as $child) {
                     $sum += $this->calculateAmount($child['id'], $costsById, $calculated);
                 }
-                $costsById[$id]['amount'] = $sum;
-                $calculated[$id] = $sum;
-                return $sum;
-            }
+                if (count($children) === 0) {
+                    $sum = floatval($cost['amount'] ?? 0);
+                }
+                break;
 
-            $calculated[$id] = floatval($cost['amount']);
-            return $calculated[$id];
+            case 'multiply_children':
+                $sum = 1;
+                foreach ($children as $child) {
+                    $sum *= $this->calculateAmount($child['id'], $costsById, $calculated);
+                }
+                if (count($children) === 0) {
+                    $sum = 0;
+                }
+                break;
+
+            case 'sum_with_children':
+                $sum = floatval($cost['amount'] ?? 0);
+                foreach ($children as $child) {
+                    $sum += $this->calculateAmount($child['id'], $costsById, $calculated);
+                }
+                break;
+
+            default:
+                $sum = floatval($cost['amount'] ?? 0);
+                break;
         }
 
-        if (($cost['calculation_type'] ?? null) === 'multiply_children' && count($children)) {
-            $product = 1;
-            foreach ($children as $child) {
-                $product *= $this->calculateAmount($child['id'], $costsById, $calculated);
-            }
-            $costsById[$id]['amount'] = $product;
-            $calculated[$id] = $product;
-            return $product;
-        }
-
-        if (count($children)) {
-            $sum = 0;
-            foreach ($children as $child) {
-                $sum += $this->calculateAmount($child['id'], $costsById, $calculated);
-            }
-            $costsById[$id]['amount'] = $sum;
-            $calculated[$id] = $sum;
-            return $sum;
-        }
-
-        $calculated[$id] = floatval($cost['amount']);
-        return $calculated[$id];
+        $costsById[$id]['amount'] = $sum;
+        $calculated[$id] = $sum;
+        return $sum;
     }
+
     protected function flattenCosts(array $nestedCosts, ?string $parent_id = null, array &$flat = []): array
     {
         foreach ($nestedCosts as $node) {
@@ -168,6 +168,70 @@ class ShipmentController extends Controller
             ]
         );
     }
+    protected function saveShipmentCosts(array $flatCosts, Shipment $shipment): void
+    {
+        $costsById = collect($flatCosts)->keyBy('id')->toArray();
+
+        $calculated = [];
+        $rootCosts = collect($costsById)->filter(fn($c) => empty($c['parent_id']));
+        foreach ($rootCosts as $rootCost) {
+            $this->calculateAmount($rootCost['id'], $costsById, $calculated);
+        }
+
+        foreach (['client', 'company'] as $side) {
+            $this->insertCostItemsRecursively($shipment, $costsById, $rootCosts, null, $side);
+            $this->updateCostTotals($shipment, $side);
+        }
+    }
+    protected function insertCostItemsRecursively(
+        Shipment $shipment,
+        array $costsById,
+        $items,
+        ?string $parentId = null,
+        string $side = 'client'
+    ): void {
+        foreach ($items as $item) {
+            $id = $item['id'];
+            $amount = is_numeric($costsById[$id]['amount']) ? $costsById[$id]['amount'] : 0;
+
+            $created = $shipment->costItems()->create([
+                'id' => Str::uuid(),
+                'name' => $costsById[$id]['name'],
+                'amount' => $amount,
+                'side' => $side,
+                'type' => $costsById[$id]['type'],
+                'parent_id' => $parentId,
+                'calculation_type' => $costsById[$id]['calculation_type'] ?? 'manual',
+            ]);
+
+            $children = collect($costsById)->filter(fn($c) => ($c['parent_id'] ?? null) === $id);
+            $this->insertCostItemsRecursively($shipment, $costsById, $children, $created->id, $side);
+        }
+    }
+    protected function updateCostTotals(Shipment $shipment, string $side): void
+    {
+        $fixed = $shipment->costItems()
+            ->where('side', $side)
+            ->where('type', 'fixed')
+            ->whereNull('parent_id')
+            ->sum('amount');
+
+        $variable = $shipment->costItems()
+            ->where('side', $side)
+            ->where('type', 'variable')
+            ->whereNull('parent_id')
+            ->sum('amount');
+
+        ShipmentCostTotal::updateOrCreate(
+            ['shipment_id' => $shipment->id, 'side' => $side],
+            [
+                'total_fixed' => $fixed,
+                'total_variable' => $variable,
+                'total_all' => $fixed + $variable,
+            ]
+        );
+    }
+
 
 
     public function index(Request $request)
@@ -245,7 +309,7 @@ class ShipmentController extends Controller
             'costs.*.id' => 'required|uuid',
             'costs.*.name' => 'string',
             'costs.*.amount' => 'nullable|numeric|min:0',
-            'costs.*.calculation_type' => 'nullable|in:manual,multiply_children',
+            'costs.*.calculation_type' => 'nullable|in:manual,multiply_children,sum_with_children',
             'costs.*.type' => 'required|in:fixed,variable',
             'costs.*.parent_id' => 'nullable|uuid',
         ])->validate();
@@ -258,79 +322,13 @@ class ShipmentController extends Controller
                 'date' => $validated['date'],
             ]);
 
-            $costs = collect($validated['costs']);
-            $costsById = $costs->keyBy('id')->toArray();
-
-            $calculated = [];
-            $rootCosts = collect($costsById)->filter(fn($c) => empty($c['parent_id']));
-
-            foreach ($rootCosts as $rootCost) {
-                $this->calculateAmount($rootCost['id'], $costsById, $calculated);
-            }
-
-            $insertCostItem = function ($costId, $parent_id = null, $side = 'client') use (&$insertCostItem, $shipment, $costsById) {
-                $cost = $costsById[$costId];
-                $amount = is_numeric($cost['amount']) ? $cost['amount'] : 0;
-
-                $item = $shipment->costItems()->create([
-                    'id' => Str::uuid(),
-                    'name' => $cost['name'],
-                    'amount' => $amount,
-                    'side' => $side,
-                    'type' => $cost['type'],
-                    'parent_id' => $parent_id,
-                    'calculation_type' => $cost['calculation_type'] ?? 'manual',
-                ]);
-
-
-                $children = collect($costsById)->filter(fn($c) => ($c['parent_id'] ?? null) === $costId);
-
-                foreach ($children as $child) {
-                    $insertCostItem($child['id'], $item->id, $side);
-                }
-            };
-
-            foreach (['client', 'company'] as $side) {
-                foreach ($rootCosts as $rootCost) {
-                    $insertCostItem($rootCost['id'], null, $side);
-                }
-            }
-
-            $totals = [
-                'client' => ['fixed' => 0, 'variable' => 0],
-                'company' => ['fixed' => 0, 'variable' => 0],
-            ];
-
-            foreach (['client', 'company'] as $side) {
-                $totals[$side]['fixed'] = $shipment->costItems()
-                    ->where('side', $side)
-                    ->where('type', 'fixed')
-                    ->whereNull('parent_id')
-                    ->sum('amount');
-
-                $totals[$side]['variable'] = $shipment->costItems()
-                    ->where('side', $side)
-                    ->where('type', 'variable')
-                    ->whereNull('parent_id')
-                    ->sum('amount');
-            }
-
-            foreach ($totals as $side => $group) {
-                ShipmentCostTotal::updateOrCreate(
-                    ['shipment_id' => $shipment->id, 'side' => $side],
-                    [
-                        'total_fixed' => $group['fixed'],
-                        'total_variable' => $group['variable'],
-                        'total_all' => $group['fixed'] + $group['variable'],
-                    ]
-                );
-            }
+            $this->saveShipmentCosts($validated['costs'], $shipment);
 
             DB::commit();
 
             return redirect()->route('shipments.show', $shipment->id)
                 ->with('success', 'Shipment dan biaya berhasil disimpan.');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
 
             return response()->json([
@@ -339,6 +337,7 @@ class ShipmentController extends Controller
             ], 500);
         }
     }
+
 
     public function updateCost(Request $request, Shipment $shipment)
     {
