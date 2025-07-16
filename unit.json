@@ -1,10 +1,10 @@
 {
     "listeners": {
-        "*:8000": {
+        "0.0.0.0:8000": {
             "pass": "routes",
             "forwarded": {
                 "protocol": "X-Forwarded-Proto",
-                "source": ["<Load balancer IP, Subnet etc.>"]
+                "source": ["127.0.0.1"]
             }
         }
     },
@@ -12,7 +12,7 @@
     "routes": [
         {
             "match": {
-                "uri": "!/index.php"
+                "uri": "/*"
             },
             "action": {
                 "share": "/var/www/html/public$uri",
