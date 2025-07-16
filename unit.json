@@ -1,6 +1,6 @@
 {
     "listeners": {
-        "0.0.0.0:8000": {
+        "0.0.0.0:9000": {
             "pass": "routes",
             "forwarded": {
                 "protocol": "X-Forwarded-Proto",

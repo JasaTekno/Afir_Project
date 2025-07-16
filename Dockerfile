@@ -42,7 +42,7 @@ RUN npm ci && npm run build
 COPY unit.json /docker-entrypoint.d/unit.json
 
 # Expose Unit port
-EXPOSE 8000
+EXPOSE 9000
 
 # Start Unit server
 CMD ["unitd", "--no-daemon"]
