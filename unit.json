@@ -4,26 +4,30 @@
             "pass": "routes",
             "forwarded": {
                 "protocol": "X-Forwarded-Proto",
-                "source": ["127.0.0.1"]
+                "source": ["<Load balancer IP, Subnet etc.>"]
             }
         }
     },
+
     "routes": [
         {
             "match": {
-                "uri": "/*"
+                "uri": "!/index.php"
             },
             "action": {
-                "pass": "applications/laravel"
+                "share": "/var/www/html/public$uri",
+                "fallback": {
+                    "pass": "applications/laravel"
+                }
             }
         }
     ],
+
     "applications": {
         "laravel": {
             "type": "php",
-            "user": "unit",
-            "root": "/var/www/html/public",
-            "index": "index.php"
+            "root": "/var/www/html/public/",
+            "script": "index.php"
         }
     }
 }
