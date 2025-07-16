@@ -67,7 +67,7 @@ RUN chown -R unit:unit storage bootstrap/cache && chmod -R 775 storage bootstrap
 COPY unit.json /docker-entrypoint.d/unit.json
 
 # Expose port
-EXPOSE 8001
+EXPOSE 8000
 
 # Start Unit server
 CMD ["unitd", "--no-daemon"]
