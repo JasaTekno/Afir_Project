@@ -1,48 +1,68 @@
+# ========================
+# STAGE 1: Frontend build
+# ========================
+FROM node:20 AS frontend
+
+WORKDIR /app
+
+# Salin file package untuk build
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Salin source frontend (resources + config vite)
+COPY resources ./resources
+COPY vite.config.* ./
+COPY public ./public
+
+# Build Vite assets
+RUN npm run build
+
+# ========================
+# STAGE 2: Laravel + PHP
+# ========================
 FROM unit:1.34.1-php8.3
 
-# Install PHP and Node.js dependencies
+# Install PHP dependencies
 RUN apt update && apt install -y \
-    curl unzip git gnupg libicu-dev libzip-dev libpng-dev libjpeg-dev libfreetype6-dev libssl-dev libpq-dev \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt install -y nodejs \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) pcntl opcache pdo pdo_pgsql intl zip gd exif ftp bcmath \
-    && pecl install redis \
-    && docker-php-ext-enable redis
+    git unzip curl libicu-dev libzip-dev libpng-dev libjpeg-dev libfreetype6-dev libssl-dev libpq-dev \
+ && docker-php-ext-configure gd --with-freetype --with-jpeg \
+ && docker-php-ext-install -j$(nproc) pcntl opcache pdo pdo_pgsql intl zip gd exif ftp bcmath \
+ && pecl install redis \
+ && docker-php-ext-enable redis
 
-# PHP configuration
+# Custom PHP config
 RUN echo "opcache.enable=1" > /usr/local/etc/php/conf.d/custom.ini \
-    && echo "opcache.jit=tracing" >> /usr/local/etc/php/conf.d/custom.ini \
-    && echo "opcache.jit_buffer_size=256M" >> /usr/local/etc/php/conf.d/custom.ini \
-    && echo "memory_limit=512M" >> /usr/local/etc/php/conf.d/custom.ini \
-    && echo "upload_max_filesize=64M" >> /usr/local/etc/php/conf.d/custom.ini \
-    && echo "post_max_size=64M" >> /usr/local/etc/php/conf.d/custom.ini
+ && echo "opcache.jit=tracing" >> /usr/local/etc/php/conf.d/custom.ini \
+ && echo "opcache.jit_buffer_size=256M" >> /usr/local/etc/php/conf.d/custom.ini \
+ && echo "memory_limit=512M" >> /usr/local/etc/php/conf.d/custom.ini \
+ && echo "upload_max_filesize=64M" >> /usr/local/etc/php/conf.d/custom.ini \
+ && echo "post_max_size=64M" >> /usr/local/etc/php/conf.d/custom.ini
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 
-# Set working directory
 WORKDIR /var/www/html
 
-# Copy Laravel source
+# Salin semua source Laravel
 COPY . .
 
-# Set proper permissions
-RUN mkdir -p storage bootstrap/cache \
-    && chown -R unit:unit storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
+# Salin hasil Vite build dari stage frontend
+COPY --from=frontend /app/public/build ./public/build
 
-# Install backend dependencies
-RUN composer install --prefer-dist --no-interaction --optimize-autoloader
+# Set permission
+RUN chown -R unit:unit . && chmod -R ug+rwX storage bootstrap/cache
 
-# Install and build frontend (Inertia/Vite)
-RUN npm ci && npm run build
+# Install backend dependency (no dev)
+RUN composer install --prefer-dist --no-dev --optimize-autoloader --no-interaction
 
-# Copy Unit config
+# Cache config
+RUN php artisan config:clear \
+ && php artisan config:cache \
+ && php artisan route:cache \
+ && php artisan view:cache
+
+# Copy config untuk Nginx Unit
 COPY unit.json /docker-entrypoint.d/unit.json
 
-# Expose Unit port
-EXPOSE 9000
-
-# Start Unit server
+EXPOSE 8000
 CMD ["unitd", "--no-daemon"]

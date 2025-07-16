@@ -1,6 +1,6 @@
 {
     "listeners": {
-        "0.0.0.0:9000": {
+        "*:8000": {
             "pass": "routes",
             "forwarded": {
                 "protocol": "X-Forwarded-Proto",
@@ -8,26 +8,22 @@
             }
         }
     },
-
     "routes": [
         {
             "match": {
                 "uri": "/*"
             },
             "action": {
-                "share": "/var/www/html/public$uri",
-                "fallback": {
-                    "pass": "applications/laravel"
-                }
+                "pass": "applications/laravel"
             }
         }
     ],
-
     "applications": {
         "laravel": {
             "type": "php",
-            "root": "/var/www/html/public/",
-            "script": "index.php"
+            "user": "unit",
+            "root": "/var/www/html/public",
+            "index": "index.php"
         }
     }
 }
